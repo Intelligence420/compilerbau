@@ -1,0 +1,9 @@
+target_sources(${PROJECT_NAME}
+    PRIVATE
+        dbug.c
+        memory.c
+        ctinfo.c
+        str.c
+        hash_table.c
+        filesystem.c
+)

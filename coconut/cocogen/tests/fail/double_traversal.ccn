@@ -1,0 +1,32 @@
+
+start phase hello {
+    actions {
+        traversal x {
+            uid = notdouble
+        };
+        phase1;
+    }
+};
+
+phase helloo {
+    actions {
+        x;
+    }
+};
+
+traversal x {
+    uid = isdouble
+};
+
+
+root node ast {
+    attributes {
+        ast next
+    }
+};
+
+phase phase1 {
+    actions {
+        pass doSomething;
+    } 
+};

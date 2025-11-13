@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Welcome to CoCoNut’s documentation! &mdash; CoCoNut  documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="CoCoNut DSL" href="dsl_syntax.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="#" class="icon icon-home">
+            CoCoNut
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="dsl_syntax.html">CoCoNut DSL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="codegen.html">Codegen</a></li>
+<li class="toctree-l1"><a class="reference internal" href="working_with_traversals.html">Working With CoCoNut</a></li>
+<li class="toctree-l1"><a class="reference internal" href="primitive_types.html">Primitive types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reserved.html">Reserved</a></li>
+<li class="toctree-l1"><a class="reference internal" href="copra.html">Copra</a></li>
+<li class="toctree-l1"><a class="reference internal" href="palm.html">Palm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="calculator.html">Calculator Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="attribute_grammar.html">Attribute Grammars in CoCoNut</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bugs.html">Bugs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">CoCoNut</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Welcome to CoCoNut’s documentation!</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="welcome-to-coconut-s-documentation">
+<h1>Welcome to CoCoNut’s documentation!<a class="headerlink" href="#welcome-to-coconut-s-documentation" title="Permalink to this heading"></a></h1>
+<p>CoCoNut is a framework to ease the construction of a compiler by providing a DSL to define the common compiler structure.
+From this specification, CoCoNut generates the boilerplate to work with the defined structure. The structure is defined using several compiler primitives: enums, nodes, nodesets, passes, traversals and phases.
+This documentation starts with an explanation of the DSL, continues with the generated code from the structure, and then shows how to
+communicate with the CoCoNut driver from within your compiler, and, finally, walk through an example building a simple REPL calculator.</p>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="dsl_syntax.html">CoCoNut DSL</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="dsl_syntax.html#types">Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dsl_syntax.html#actions">Actions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="codegen.html">Codegen</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="codegen.html#enum">Enum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="codegen.html#nodes">Nodes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="codegen.html#passes">Passes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="codegen.html#traversals">Traversals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="codegen.html#traversal-data">Traversal Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="codegen.html#generated-skeleton">Generated Skeleton</a></li>
+<li class="toctree-l2"><a class="reference internal" href="codegen.html#files">Files</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="working_with_traversals.html">Working With CoCoNut</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="working_with_traversals.html#traversals">Traversals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="working_with_traversals.html#cycles">Cycles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="working_with_traversals.html#nodes">Nodes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="working_with_traversals.html#error-signals">Error signals</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="primitive_types.html">Primitive types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reserved.html">Reserved</a></li>
+<li class="toctree-l1"><a class="reference internal" href="copra.html">Copra</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="copra.html#phase-driver-h">phase_driver.h</a></li>
+<li class="toctree-l2"><a class="reference internal" href="copra.html#dynamic-core-h">dynamic_core.h</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="palm.html">Palm</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="palm.html#str-h">str.h</a></li>
+<li class="toctree-l2"><a class="reference internal" href="palm.html#hash-table-h">hash_table.h</a></li>
+<li class="toctree-l2"><a class="reference internal" href="palm.html#dbug-h">dbug.h</a></li>
+<li class="toctree-l2"><a class="reference internal" href="palm.html#memory-h">memory.h</a></li>
+<li class="toctree-l2"><a class="reference internal" href="palm.html#ctinfo-h">ctinfo.h</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="calculator.html">Calculator Example</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="calculator.html#adding-a-binop-node">Adding a binop node</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calculator.html#adding-a-traversal">Adding a traversal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calculator.html#fully-using-coconut">Fully using CoCoNut</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="attribute_grammar.html">Attribute Grammars in CoCoNut</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="attribute_grammar.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="attribute_grammar.html#adding-attributes-to-the-dsl-file">Adding attributes to the DSL file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="attribute_grammar.html#visit-generation">Visit generation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="attribute_grammar.html#evaluation-rules">Evaluation rules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="attribute_grammar.html#more-information">More information</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="faq.html#can-cycles-have-a-gate">Can cycles have a gate?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="faq.html#do-unreachable-nodes-need-to-be-handled">Do unreachable nodes need to be handled?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="faq.html#how-do-i-create-a-png-of-my-ast">How do I create a png of my AST?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="faq.html#can-i-define-a-user-type-for-attributes">Can I define a user type for attributes?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="faq.html#can-i-have-syntax-highlighting-for-the-dsl-files-in-vscode">Can I have syntax highlighting for the DSL files in vscode?</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="bugs.html">Bugs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="bugs.html#dot-does-not-handle-nodesets-well">Dot does not handle nodesets well</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bugs.html#circular-phase-definitions">Circular phase definitions</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<section id="indices-and-tables">
+<h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="dsl_syntax.html" class="btn btn-neutral float-right" title="CoCoNut DSL" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Damian.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

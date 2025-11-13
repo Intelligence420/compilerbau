@@ -1,0 +1,152 @@
+start phase RootPhase {
+    info = "Denotes the entry point of your compiler",
+
+    actions {
+        pass SPdoScanParse;
+        // Demo;
+        print;
+    }
+};
+
+traversal Print {
+    uid = PRT
+};
+
+phase Demo {
+    actions {
+        traversal RenameIdentifiers {
+            uid = RI,
+            nodes = { Var, VarLet }
+        };
+
+        traversal SumInts {
+            uid = SI,
+            nodes = { Stmts, Num },
+            travdata {
+                int sum
+            }
+        };
+
+        traversal OptSubstraction {
+            uid = OS,
+            nodes = { Binop }
+        };
+    }
+};
+
+/*** AST ***/
+
+enum MonOpType {
+    prefix = MO,
+    values {
+        not, neg
+    }
+};
+
+enum BinOpType {
+    prefix = BO,
+    values {
+        add, sub, mul, div, mod, lt, le, gt, ge, eq, ne,
+        and, or
+    }
+};
+
+enum DeclarationType {
+    prefix = TY,
+    values {
+        int, float, bool, void
+    }
+};
+
+nodeset Expr = {Num, Float, Bool, Binop, Var};
+nodeset Stmt = {Assign, Declaration, Voiddeclaration};
+
+// Nodes you want to be able to link to from your symbol table.
+nodeset Link = Expr | Stmt;
+
+root node Program {
+    children {
+        Stmts stmts { constructor, mandatory }
+    }
+};
+
+node Stmts {
+    children {
+        Stmt stmt { constructor, mandatory },
+        Stmts next { constructor }
+    }
+};
+
+node Assign {
+    children {
+        VarLet let { constructor },
+        Expr expr { constructor, mandatory }
+    }
+};
+
+node Declaration {
+    children {
+        Expr expr { constructor, mandatory }
+    },
+
+    attributes {
+        DeclarationType type { constructor },
+        string name { constructor }
+    }
+};
+
+node Voiddeclaration {
+    attributes{
+        DeclarationType type {constructor}
+    }
+};
+
+node Binop {
+    children {
+        Expr left { constructor, mandatory },
+        Expr right { constructor, mandatory }
+    },
+
+    attributes {
+        BinOpType op { constructor }
+    }
+};
+
+nodeset Vars {
+    nodes = {VarLet, Var},
+
+    attributes {
+        string name,
+        Link decl
+    }
+};
+
+node VarLet {
+    attributes {
+        string name { constructor }  // Repeat from nodeset to add constructor
+    }
+};
+
+node Var {
+    attributes {
+        string name { constructor }
+    }
+};
+
+node Num {
+    attributes {
+        int val { constructor }
+    }
+};
+
+node Float {
+    attributes {
+        float val { constructor }
+    }
+};
+
+node Bool {
+    attributes {
+        bool val { constructor }
+    }
+};

@@ -1,0 +1,18 @@
+
+start phase hello {
+    actions {
+        pass p;
+    }
+};
+
+root node ast {
+    attributes {
+        int val
+    }
+};
+
+root node ast2 {
+    attributes {
+        int val
+    }
+};
