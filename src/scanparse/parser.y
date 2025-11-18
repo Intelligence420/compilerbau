@@ -119,7 +119,6 @@ dostatement: DOSTATEMENT block[block] WHILESTATEMENT BRACKET_L expr[expr] BRACKE
           $$ = ASTdostatement($block, $expr);
       };
 
-//for ( int Id = Expr , Expr [ , Expr ] ) Block
 forstatement: FORSTATEMENT BRACKET_L INTTYPE ID[variable] LET expr[init] COMMA expr[until] COMMA expr[step] BRACKET_R block[block] {
           $$ = ASTforstatement($init, $until, $step, $block, $variable);
        }
