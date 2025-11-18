@@ -36,7 +36,6 @@ int yycolumn = 1;
 %option nounput
 %option yylineno
 
-
 %%
 
 "("                        { FILTER( BRACKET_L); }

@@ -47,7 +47,7 @@ void AddLocToNode(node_st *node, void *begin_loc, void *end_loc);
 
 %type <node> intval floatval boolval constant expr
 %type <node> stmts stmt declaration assign varlet program voiddeclaration ifstatement block
-%type <node> whilestatement dostatement forstatement for_declaration
+%type <node> whilestatement dostatement forstatement
 %type <cbinop> binop
 %type <ctype> decltype voidtype
 
@@ -120,11 +120,11 @@ dostatement: DOSTATEMENT block[block] WHILESTATEMENT BRACKET_L expr[expr] BRACKE
       };
 
 //for ( int Id = Expr , Expr [ , Expr ] ) Block
-forstatement: FORSTATEMENT BRACKET_L for_declaration COMMA expr[expr1] COMMA expr[expr2] BRACKET_R block[block] {
-          $$ = ASTforstatement($for_declaration, $expr1, $expr2, $block);
+forstatement: FORSTATEMENT BRACKET_L INTTYPE ID[variable] LET expr[init] COMMA expr[until] COMMA expr[step] BRACKET_R block[block] {
+          $$ = ASTforstatement($init, $until, $step, $block, $variable);
        }
-       | FORSTATEMENT BRACKET_L for_declaration COMMA expr[expr1] BRACKET_R block[block] {
-          $$ = ASTforstatement($for_declaration, $expr1, NULL, $block);
+       | FORSTATEMENT BRACKET_L INTTYPE ID[variable] LET expr[init] COMMA expr[until] BRACKET_R block[block] {
+          $$ = ASTforstatement($init, $until, NULL, $block, $variable);
        }
        ;
 
@@ -137,15 +137,6 @@ declaration: decltype[type] ID[name] LET constant[expr] SEMICOLON
           $$ = ASTdeclaration($expr, $type, $name);
        };
 
-for_declaration: decltype[type] ID[name] LET constant[expr]
-       {
-          $$ = ASTdeclaration($expr, $type, $name);
-       }
-       | decltype[type] ID[name] LET expr[expr]
-       {
-          $$ = ASTdeclaration($expr, $type, $name);
-       }
-       ;
 
 decltype: INTTYPE { $$ = TY_int; }
     | FLOATTYPE { $$ = TY_float; }
