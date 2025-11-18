@@ -3,7 +3,17 @@ int a = 3;
 float b = 23412.5;
  
 bool c = false;
-void;
-/* 
-Hello*
-*/
+int d = (2 + 2);
+
+if (true) {
+    int z = 2;
+}
+
+float s = 3.0;
+
+if (2 == 3) {
+    float d = 2.5;
+    d = (a + d);
+} else {
+    float g = 2.5;
+}

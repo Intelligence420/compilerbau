@@ -33,9 +33,10 @@ void AddLocToNode(node_st *node, void *begin_loc, void *end_loc);
 
 %locations
 
-%token BRACKET_L BRACKET_R COMMA SEMICOLON
+%token BRACKET_L BRACKET_R COMMA SEMICOLON CURLBRACKET_L CURLBRACKET_R
 %token MINUS PLUS STAR SLASH PERCENT LE LT GE GT EQ NE OR AND
-%token TRUEVAL FALSEVAL LET
+%token TRUEVAL FALSEVAL LET 
+%token IFSTATEMENT ELSESTATEMENT
 %token INTTYPE FLOATTYPE BOOLTYPE VOIDTYPE
 
 %token <cint> NUM
@@ -44,7 +45,7 @@ void AddLocToNode(node_st *node, void *begin_loc, void *end_loc);
 %token <id> ID
 
 %type <node> intval floatval boolval constant expr
-%type <node> stmts stmt declaration assign varlet program voiddeclaration
+%type <node> stmts stmt declaration assign varlet program voiddeclaration ifstatement block
 %type <cbinop> binop
 %type <ctype> decltype voidtype
 
@@ -80,9 +81,25 @@ stmt: assign
        | voiddeclaration
        {
          $$ = $1;
+       }
+       | ifstatement
+       {
+        $$ = $1;
        };
 
+ifstatement: IFSTATEMENT BRACKET_L expr[expr] BRACKET_R block[block] ELSESTATEMENT block[block2] {
+          $$ = ASTifelsestatement($block, $expr, $block2);
+        }
+        | IFSTATEMENT BRACKET_L expr[expr] BRACKET_R block[block]{
+          $$ = ASTifstatement($block, $expr);
+        }
+        ;
+
 declaration: decltype[type] ID[name] LET constant[expr] SEMICOLON
+       {
+          $$ = ASTdeclaration($expr, $type, $name);
+       }
+       | decltype[type] ID[name] LET expr[expr] SEMICOLON
        {
           $$ = ASTdeclaration($expr, $type, $name);
        };
@@ -121,12 +138,20 @@ expr: constant
       {
         $$ = ASTvar($1);
       }
-    | BRACKET_L expr[left] binop[type] expr[right] BRACKET_R
+    | expr[left] binop[type] expr[right]
       {
         $$ = ASTbinop( $left, $right, $type);
         AddLocToNode($$, &@left, &@right);
       }
+    | BRACKET_L expr[expr] BRACKET_R
+    {
+      $$ = $1;
+    }
     ;
+
+block: CURLBRACKET_L stmts[stmts] CURLBRACKET_R {
+      $$ = ASTblock($stmts);
+      };
 
 constant: floatval
           {

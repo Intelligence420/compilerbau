@@ -41,6 +41,8 @@ int yycolumn = 1;
 
 "("                        { FILTER( BRACKET_L); }
 ")"                        { FILTER( BRACKET_R); }
+"{"                         { FILTER(CURLBRACKET_L);}
+"}"                         { FILTER(CURLBRACKET_R);}
 ","                        { FILTER( COMMA); }
 ";"                        { FILTER( SEMICOLON); }
 
@@ -63,6 +65,9 @@ int yycolumn = 1;
 
 "true"                     { FILTER( TRUEVAL); }
 "false"                    { FILTER( FALSEVAL); }
+
+"if"                        { FILTER( IFSTATEMENT); }
+"else"                      { FILTER( ELSESTATEMENT); }
 
 "int"                       { FILTER( INTTYPE); }
 "float"                     { FILTER( FLOATTYPE); }
