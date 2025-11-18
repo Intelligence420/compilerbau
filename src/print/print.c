@@ -159,11 +159,23 @@ node_st *PRTifelsestatement(node_st *node){
 }
 
 node_st *PRTwhilestatement(node_st *node){
-  printf("while ");
+  printf("while \n");
   TRAVexpr(node);
   printf("\n");
 
   TRAVblock(node);
+
+  return node;
+}
+
+node_st *PRTdostatement(node_st *node){
+  printf("do\n");
+
+  TRAVblock(node);
+
+  printf("while ");
+  TRAVexpr(node);
+  printf(";\n");
 
   return node;
 }

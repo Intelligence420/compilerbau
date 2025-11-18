@@ -70,6 +70,7 @@ int yycolumn = 1;
 "else"                      { FILTER( ELSESTATEMENT); }
 
 "while"                     { FILTER( WHILESTATEMENT); }
+"do"                        { FILTER( DOSTATEMENT); }
 
 "int"                       { FILTER( INTTYPE); }
 "float"                     { FILTER( FLOATTYPE); }

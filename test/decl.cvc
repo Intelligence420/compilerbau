@@ -29,3 +29,11 @@ while (c || false) {
 while (a != 10) {
     a = a+1;
 }
+
+do {
+    s = (s - 1.0);
+} while (s > 0.0);
+
+do {
+    c = false;
+} while (c && true);
