@@ -37,7 +37,7 @@ void AddLocToNode(node_st *node, void *begin_loc, void *end_loc);
 %token MINUS PLUS STAR SLASH PERCENT LE LT GE GT EQ NE OR AND
 %token TRUEVAL FALSEVAL LET 
 %token IFSTATEMENT ELSESTATEMENT
-%token WHILESTATEMENT
+%token WHILESTATEMENT, DOSTATEMENT
 %token INTTYPE FLOATTYPE BOOLTYPE VOIDTYPE
 
 %token <cint> NUM
@@ -47,7 +47,7 @@ void AddLocToNode(node_st *node, void *begin_loc, void *end_loc);
 
 %type <node> intval floatval boolval constant expr
 %type <node> stmts stmt declaration assign varlet program voiddeclaration ifstatement block
-%type <node> whilestatement
+%type <node> whilestatement dostatement
 %type <cbinop> binop
 %type <ctype> decltype voidtype
 
@@ -91,6 +91,10 @@ stmt: assign
        | whilestatement
        {
          $$ = $1;
+       }
+       | dostatement
+       {
+          $$ = $1;
        };
 
 ifstatement: IFSTATEMENT BRACKET_L expr[expr] BRACKET_R block[block] ELSESTATEMENT block[block2] {
@@ -103,7 +107,13 @@ ifstatement: IFSTATEMENT BRACKET_L expr[expr] BRACKET_R block[block] ELSESTATEME
 
 whilestatement: WHILESTATEMENT BRACKET_L expr[expr] BRACKET_R block[block] {
           $$ = ASTwhilestatement($block, $expr);      
-        };
+        }
+        ;
+
+//do Block while ( Expr ) ;
+dostatement: DOSTATEMENT block[block] WHILESTATEMENT BRACKET_L expr[expr] BRACKET_R SEMICOLON {
+          $$ = ASTdostatement($block, $expr);
+      };
 
 declaration: decltype[type] ID[name] LET constant[expr] SEMICOLON
        {
