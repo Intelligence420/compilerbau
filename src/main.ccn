@@ -59,7 +59,7 @@ enum DeclarationType {
 };
 
 nodeset Expr = {Num, Float, Bool, Binop, Var};
-nodeset Stmt = {Assign, Declaration, Voiddeclaration, Ifstatement, Ifelsestatement};
+nodeset Stmt = {Assign, Declaration, Voiddeclaration, Ifstatement, Ifelsestatement, Whilestatement};
 
 // Nodes you want to be able to link to from your symbol table.
 nodeset Link = Expr | Stmt;
@@ -119,6 +119,13 @@ node Ifelsestatement {
         Block ifblock {constructor},
         Expr expr { constructor, mandatory},
         Block elseblock { constructor }
+    }
+};
+
+node Whilestatement {
+    children {
+        Block block {constructor},
+        Expr expr { constructor, mandatory}
     }
 };
 
