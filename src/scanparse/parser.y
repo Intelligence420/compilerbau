@@ -37,7 +37,7 @@ void AddLocToNode(node_st *node, void *begin_loc, void *end_loc);
 %token MINUS PLUS STAR SLASH PERCENT LE LT GE GT EQ NE OR AND
 %token TRUEVAL FALSEVAL LET 
 %token IFSTATEMENT ELSESTATEMENT
-%token WHILESTATEMENT, DOSTATEMENT
+%token WHILESTATEMENT DOSTATEMENT FORSTATEMENT
 %token INTTYPE FLOATTYPE BOOLTYPE VOIDTYPE
 
 %token <cint> NUM
@@ -47,7 +47,7 @@ void AddLocToNode(node_st *node, void *begin_loc, void *end_loc);
 
 %type <node> intval floatval boolval constant expr
 %type <node> stmts stmt declaration assign varlet program voiddeclaration ifstatement block
-%type <node> whilestatement dostatement
+%type <node> whilestatement dostatement forstatement for_declaration
 %type <cbinop> binop
 %type <ctype> decltype voidtype
 
@@ -95,7 +95,12 @@ stmt: assign
        | dostatement
        {
           $$ = $1;
-       };
+       }
+       | forstatement
+       {
+         $$ = $1;
+       }
+       ;
 
 ifstatement: IFSTATEMENT BRACKET_L expr[expr] BRACKET_R block[block] ELSESTATEMENT block[block2] {
           $$ = ASTifelsestatement($block, $expr, $block2);
@@ -110,10 +115,18 @@ whilestatement: WHILESTATEMENT BRACKET_L expr[expr] BRACKET_R block[block] {
         }
         ;
 
-//do Block while ( Expr ) ;
 dostatement: DOSTATEMENT block[block] WHILESTATEMENT BRACKET_L expr[expr] BRACKET_R SEMICOLON {
           $$ = ASTdostatement($block, $expr);
       };
+
+//for ( int Id = Expr , Expr [ , Expr ] ) Block
+forstatement: FORSTATEMENT BRACKET_L for_declaration COMMA expr[expr1] COMMA expr[expr2] BRACKET_R block[block] {
+          $$ = ASTforstatement($for_declaration, $expr1, $expr2, $block);
+       }
+       | FORSTATEMENT BRACKET_L for_declaration COMMA expr[expr1] BRACKET_R block[block] {
+          $$ = ASTforstatement($for_declaration, $expr1, NULL, $block);
+       }
+       ;
 
 declaration: decltype[type] ID[name] LET constant[expr] SEMICOLON
        {
@@ -123,6 +136,16 @@ declaration: decltype[type] ID[name] LET constant[expr] SEMICOLON
        {
           $$ = ASTdeclaration($expr, $type, $name);
        };
+
+for_declaration: decltype[type] ID[name] LET constant[expr]
+       {
+          $$ = ASTdeclaration($expr, $type, $name);
+       }
+       | decltype[type] ID[name] LET expr[expr]
+       {
+          $$ = ASTdeclaration($expr, $type, $name);
+       }
+       ;
 
 decltype: INTTYPE { $$ = TY_int; }
     | FLOATTYPE { $$ = TY_float; }

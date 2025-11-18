@@ -11,7 +11,6 @@
 #include "ccngen/ast.h"
 #include "ccngen/trav.h"
 #include "palm/dbug.h"
-#include <stdio.h>
 
 /**
  * @fn PRTprogram
@@ -176,6 +175,21 @@ node_st *PRTdostatement(node_st *node){
   printf("while ");
   TRAVexpr(node);
   printf(";\n");
+
+  return node;
+}
+
+node_st *PRTforstatement(node_st *node){
+  printf("for (");
+  TRAVopt(FORSTATEMENT_DECLARATION(node));
+  TRAVopt(FORSTATEMENT_EXPR1(node));
+  if (FORSTATEMENT_EXPR2(node) != NULL) {
+    printf(", ");
+    TRAVopt(FORSTATEMENT_EXPR2(node));
+  }
+  printf(")\n");
+
+  TRAVblock(node);
 
   return node;
 }
