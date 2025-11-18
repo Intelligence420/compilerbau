@@ -129,7 +129,6 @@ varlet: ID
         }
         ;
 
-
 expr: constant
       {
         $$ = $1;
@@ -143,9 +142,9 @@ expr: constant
         $$ = ASTbinop( $left, $right, $type);
         AddLocToNode($$, &@left, &@right);
       }
-    | BRACKET_L expr[expr] BRACKET_R
+    | BRACKET_L expr[experssion] BRACKET_R
     {
-      $$ = $1;
+      $$ = $experssion;
     }
     ;
 
