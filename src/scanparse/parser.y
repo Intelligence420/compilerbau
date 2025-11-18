@@ -37,7 +37,7 @@ void AddLocToNode(node_st *node, void *begin_loc, void *end_loc);
 %token MINUS PLUS STAR SLASH PERCENT LE LT GE GT EQ NE OR AND
 %token TRUEVAL FALSEVAL LET 
 %token IFSTATEMENT ELSESTATEMENT
-%token WHILESTATEMENT, DOSTATEMENT
+%token WHILESTATEMENT DOSTATEMENT FORSTATEMENT
 %token INTTYPE FLOATTYPE BOOLTYPE VOIDTYPE
 
 %token <cint> NUM
@@ -47,7 +47,7 @@ void AddLocToNode(node_st *node, void *begin_loc, void *end_loc);
 
 %type <node> intval floatval boolval constant expr
 %type <node> stmts stmt declaration assign varlet program voiddeclaration ifstatement block
-%type <node> whilestatement dostatement
+%type <node> whilestatement dostatement forstatement
 %type <cbinop> binop
 %type <ctype> decltype voidtype
 
@@ -95,7 +95,12 @@ stmt: assign
        | dostatement
        {
           $$ = $1;
-       };
+       }
+       | forstatement
+       {
+         $$ = $1;
+       }
+       ;
 
 ifstatement: IFSTATEMENT BRACKET_L expr[expr] BRACKET_R block[block] ELSESTATEMENT block[block2] {
           $$ = ASTifelsestatement($block, $expr, $block2);
@@ -110,10 +115,17 @@ whilestatement: WHILESTATEMENT BRACKET_L expr[expr] BRACKET_R block[block] {
         }
         ;
 
-//do Block while ( Expr ) ;
 dostatement: DOSTATEMENT block[block] WHILESTATEMENT BRACKET_L expr[expr] BRACKET_R SEMICOLON {
           $$ = ASTdostatement($block, $expr);
       };
+
+forstatement: FORSTATEMENT BRACKET_L INTTYPE ID[variable] LET expr[init] COMMA expr[until] COMMA expr[step] BRACKET_R block[block] {
+          $$ = ASTforstatement($init, $until, $step, $block, $variable);
+       }
+       | FORSTATEMENT BRACKET_L INTTYPE ID[variable] LET expr[init] COMMA expr[until] BRACKET_R block[block] {
+          $$ = ASTforstatement($init, $until, NULL, $block, $variable);
+       }
+       ;
 
 declaration: decltype[type] ID[name] LET constant[expr] SEMICOLON
        {
@@ -123,6 +135,7 @@ declaration: decltype[type] ID[name] LET constant[expr] SEMICOLON
        {
           $$ = ASTdeclaration($expr, $type, $name);
        };
+
 
 decltype: INTTYPE { $$ = TY_int; }
     | FLOATTYPE { $$ = TY_float; }
