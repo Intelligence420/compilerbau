@@ -37,6 +37,7 @@ void AddLocToNode(node_st *node, void *begin_loc, void *end_loc);
 %token MINUS PLUS STAR SLASH PERCENT LE LT GE GT EQ NE OR AND
 %token TRUEVAL FALSEVAL LET 
 %token IFSTATEMENT ELSESTATEMENT
+%token WHILESTATEMENT
 %token INTTYPE FLOATTYPE BOOLTYPE VOIDTYPE
 
 %token <cint> NUM
@@ -46,6 +47,7 @@ void AddLocToNode(node_st *node, void *begin_loc, void *end_loc);
 
 %type <node> intval floatval boolval constant expr
 %type <node> stmts stmt declaration assign varlet program voiddeclaration ifstatement block
+%type <node> whilestatement
 %type <cbinop> binop
 %type <ctype> decltype voidtype
 
@@ -85,6 +87,10 @@ stmt: assign
        | ifstatement
        {
         $$ = $1;
+       }
+       | whilestatement
+       {
+         $$ = $1;
        };
 
 ifstatement: IFSTATEMENT BRACKET_L expr[expr] BRACKET_R block[block] ELSESTATEMENT block[block2] {
@@ -94,6 +100,10 @@ ifstatement: IFSTATEMENT BRACKET_L expr[expr] BRACKET_R block[block] ELSESTATEME
           $$ = ASTifstatement($block, $expr);
         }
         ;
+
+whilestatement: WHILESTATEMENT BRACKET_L expr[expr] BRACKET_R block[block] {
+          $$ = ASTwhilestatement($block, $expr);      
+        };
 
 declaration: decltype[type] ID[name] LET constant[expr] SEMICOLON
        {
@@ -198,6 +208,7 @@ binop: PLUS      { $$ = BO_add; }
      | GE        { $$ = BO_ge; }
      | GT        { $$ = BO_gt; }
      | EQ        { $$ = BO_eq; }
+     | NE        { $$ = BO_ne; }
      | OR        { $$ = BO_or; }
      | AND       { $$ = BO_and; }
      ;

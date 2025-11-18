@@ -69,6 +69,8 @@ int yycolumn = 1;
 "if"                        { FILTER( IFSTATEMENT); }
 "else"                      { FILTER( ELSESTATEMENT); }
 
+"while"                     { FILTER( WHILESTATEMENT); }
+
 "int"                       { FILTER( INTTYPE); }
 "float"                     { FILTER( FLOATTYPE); }
 "bool"                      { FILTER ( BOOLTYPE); }
