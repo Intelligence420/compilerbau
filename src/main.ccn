@@ -3,35 +3,12 @@ start phase RootPhase {
 
     actions {
         pass SPdoScanParse;
-        // Demo;
         print;
     }
 };
 
 traversal Print {
     uid = PRT
-};
-
-phase Demo {
-    actions {
-        traversal RenameIdentifiers {
-            uid = RI,
-            nodes = { Var, VarLet }
-        };
-
-        traversal SumInts {
-            uid = SI,
-            nodes = { Stmts, Num },
-            travdata {
-                int sum
-            }
-        };
-
-        traversal OptSubstraction {
-            uid = OS,
-            nodes = { Binop }
-        };
-    }
 };
 
 /*** AST ***/
@@ -59,7 +36,7 @@ enum DeclarationType {
 };
 
 nodeset Expr = {Num, Float, Bool, Binop, Var};
-nodeset Stmt = {Assign, Ifstatement, Ifelsestatement, Funcdef};
+nodeset Stmt = {Assign, Ifstatement, Ifelsestatement, Funcdef, Whilestatement, Dostatement, Forstatement};
 
 // Nodes you want to be able to link to from your symbol table.
 nodeset Link = Expr | Stmt;
@@ -103,7 +80,7 @@ node Funcheader {
 
 node Funcbody {
     children {
-        Declarations decl { constructor }, 
+        Declarations decl { constructor },
         Stmts stmts {constructor}
     }
 };
@@ -159,6 +136,35 @@ node Ifelsestatement {
         Block ifblock {constructor},
         Expr expr { constructor, mandatory},
         Block elseblock { constructor }
+    }
+};
+
+node Whilestatement {
+    children {
+        Block block {constructor},
+        Expr expr { constructor, mandatory}
+    }
+};
+
+node Dostatement {
+    children {
+        Block block {constructor},
+        Expr expr { constructor, mandatory}
+    }
+};
+
+node Forstatement {
+    children {
+        Expr init { constructor, mandatory },
+
+        Expr until { constructor, mandatory },
+        Expr step { constructor },
+
+        Block block { constructor, mandatory }
+    },
+
+    attributes {
+        string variable { constructor, mandatory }
     }
 };
 

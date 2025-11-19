@@ -36,7 +36,6 @@ int yycolumn = 1;
 %option nounput
 %option yylineno
 
-
 %%
 
 "("                        { FILTER( BRACKET_L); }
@@ -68,6 +67,10 @@ int yycolumn = 1;
 
 "if"                        { FILTER( IFSTATEMENT); }
 "else"                      { FILTER( ELSESTATEMENT); }
+
+"while"                     { FILTER( WHILESTATEMENT); }
+"do"                        { FILTER( DOSTATEMENT); }
+"for"                       { FILTER( FORSTATEMENT); }
 
 "int"                       { FILTER( INTTYPE); }
 "float"                     { FILTER( FLOATTYPE); }

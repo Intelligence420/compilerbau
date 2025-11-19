@@ -11,6 +11,7 @@
 #include "ccngen/ast.h"
 #include "ccngen/trav.h"
 #include "palm/dbug.h"
+#include <stdio.h>
 
 /**
  * @fn PRTprogram
@@ -178,17 +179,19 @@ node_st *PRTbinop(node_st *node)
 
     TRAVright(node);
 
-    printf( ")(%d:%d-%d)", NODE_BLINE(node), NODE_BCOL(node), NODE_ECOL(node));
+    printf( ")");
 
     return node;
 }
 
 node_st *PRTdeclaration(node_st *node) {
-  char *decltype;
+  char *decltype = NULL;
   switch (DECLARATION_TYPE(node)) {
     case TY_int: decltype = "int"; break;
     case TY_float: decltype = "float"; break;
     case TY_bool: decltype = "bool"; break;
+    case TY_void: decltype = "void"; break;
+    default: DBUG_ASSERT(false, "unknown decltype detected!");
   }
 
   printf("%s %s", decltype, DECLARATION_NAME(node));
@@ -225,6 +228,45 @@ node_st *PRTifelsestatement(node_st *node){
   return node;
 }
 
+node_st *PRTwhilestatement(node_st *node){
+  printf("while \n");
+  TRAVexpr(node);
+  printf("\n");
+
+  TRAVblock(node);
+
+  return node;
+}
+
+node_st *PRTdostatement(node_st *node){
+  printf("do\n");
+
+  TRAVblock(node);
+
+  printf("while ");
+  TRAVexpr(node);
+  printf(";\n");
+
+  return node;
+}
+
+node_st *PRTforstatement(node_st *node){
+  printf("for (int %s = ", FORSTATEMENT_VARIABLE(node));
+  TRAVinit(node);
+  printf(", ");
+
+  TRAVuntil(node);
+  if (FORSTATEMENT_STEP(node) != NULL) {
+    printf(", ");
+    TRAVstep(node);
+  }
+  printf(")\n");
+
+  TRAVblock(node);
+
+  return node;
+}
+
 node_st *PRTblock(node_st *node) {
   printf("{\n");
   TRAVchildren(node);
@@ -238,7 +280,7 @@ node_st *PRTblock(node_st *node) {
  */
 node_st *PRTvarlet(node_st *node)
 {
-    printf("%s(%d:%d)", VARLET_NAME(node), NODE_BLINE(node), NODE_BCOL(node));
+    printf("%s", VARLET_NAME(node));
     return node;
 }
 
