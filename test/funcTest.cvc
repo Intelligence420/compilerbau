@@ -1,0 +1,12 @@
+int s;
+int isTrue;
+
+void hallo(int a, float b) {
+    int a;
+
+    if (2 == 3) {
+    d = (a + d);
+    } else {
+        a = 3 + 2;
+    }
+}

@@ -44,18 +44,22 @@ void AddLocToNode(node_st *node, void *begin_loc, void *end_loc);
 %token <cbool> BOOL
 %token <id> ID
 
-%type <node> intval floatval boolval constant expr
-%type <node> stmts stmt declaration assign varlet program voiddeclaration ifstatement block
+%type <node> intval floatval boolval constant expr declarations 
+%type <node> funcdef funcheader funcbody funcparamdef 
+%type <node> stmts stmt declaration assign varlet program ifstatement block param
 %type <cbinop> binop
-%type <ctype> decltype voidtype
+%type <ctype> decltype voidtype rettype 
 
 %start program
 
 %%
 
-program: stmts
+program: declarations stmts {
+          parseresult = ASTprogram($1, $2);
+        }
+        |stmts
          {
-           parseresult = ASTprogram($1);
+           parseresult = ASTprogram(NULL, $1);
          }
          ;
 
@@ -69,16 +73,11 @@ stmts: stmt stmts
         }
         ;
 
-stmt: assign
-       {
-         $$ = $1;
+stmt: funcdef 
+       { 
+        $$ = $1; 
        }
-       |
-       declaration
-       {
-         $$ = $1;
-       }
-       | voiddeclaration
+      | assign
        {
          $$ = $1;
        }
@@ -86,6 +85,44 @@ stmt: assign
        {
         $$ = $1;
        };
+
+funcdef: funcheader[header] CURLBRACKET_L funcbody[funcbody] CURLBRACKET_R
+                 {
+                    $$ = ASTfuncdef($header, $funcbody);
+                    
+                  }
+
+funcheader: rettype[type] ID[funcname] BRACKET_L funcparamdef[funcparam] BRACKET_R {
+          $$ = ASTfuncheader($funcparam, $type, $funcname);
+        }
+
+rettype: voidtype { 
+          $$ = $1; 
+        }
+       | decltype { 
+        $$ = $1; 
+        };
+
+funcparamdef: param funcparamdef {
+              $$ = ASTparams($1, $2);
+            }
+            | param {
+              $$ = ASTparams($1, NULL);
+            };
+
+funcbody: declarations stmts {
+          $$ = ASTfuncbody($1, $2);
+        }
+        | stmts  {
+          $$ = ASTfuncbody(NULL, $1);
+        };
+
+param: decltype[type] ID[name] COMMA {
+          $$ = ASTparam($type, $name);
+        }
+        | decltype[type] ID[name] {
+          $$ = ASTparam($type, $name);
+        };
 
 ifstatement: IFSTATEMENT BRACKET_L expr[expr] BRACKET_R block[block] ELSESTATEMENT block[block2] {
           $$ = ASTifelsestatement($block, $expr, $block2);
@@ -95,6 +132,13 @@ ifstatement: IFSTATEMENT BRACKET_L expr[expr] BRACKET_R block[block] ELSESTATEME
         }
         ;
 
+declarations: declaration declarations {
+          $$ = ASTdeclarations($1, $2);
+       }
+       | declaration {
+          $$ = ASTdeclarations($1, NULL);
+       }
+
 declaration: decltype[type] ID[name] LET constant[expr] SEMICOLON
        {
           $$ = ASTdeclaration($expr, $type, $name);
@@ -102,17 +146,17 @@ declaration: decltype[type] ID[name] LET constant[expr] SEMICOLON
        | decltype[type] ID[name] LET expr[expr] SEMICOLON
        {
           $$ = ASTdeclaration($expr, $type, $name);
-       };
+       }
+       | decltype[type] ID[name] SEMICOLON
+       {
+          $$ = ASTdeclaration(NULL, $type, $name);
+       }
+       ;
 
 decltype: INTTYPE { $$ = TY_int; }
     | FLOATTYPE { $$ = TY_float; }
     | BOOLTYPE { $$ = TY_bool; }
     ;
-
-voiddeclaration: voidtype[type] SEMICOLON
-       {
-        $$ = ASTvoiddeclaration($type);
-       };
 
 voidtype: VOIDTYPE { $$ = TY_void; };
 

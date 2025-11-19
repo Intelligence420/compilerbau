@@ -59,13 +59,14 @@ enum DeclarationType {
 };
 
 nodeset Expr = {Num, Float, Bool, Binop, Var};
-nodeset Stmt = {Assign, Declaration, Voiddeclaration, Ifstatement, Ifelsestatement};
+nodeset Stmt = {Assign, Ifstatement, Ifelsestatement, Funcdef};
 
 // Nodes you want to be able to link to from your symbol table.
 nodeset Link = Expr | Stmt;
 
 root node Program {
     children {
+        Declarations decl { constructor},
         Stmts stmts { constructor, mandatory }
     }
 };
@@ -83,6 +84,30 @@ node Stmts {
     }
 };
 
+node Funcdef {
+    children {
+        Funcheader funcheader {constructor, mandatory},
+        Funcbody funcbody { constructor}
+    }
+};
+
+node Funcheader {
+    children {
+        Params params {constructor}
+    },
+    attributes {
+        DeclarationType type { constructor },
+        string name {constructor}
+    }
+};
+
+node Funcbody {
+    children {
+        Declarations decl { constructor }, 
+        Stmts stmts {constructor}
+    }
+};
+
 node Assign {
     children {
         VarLet let { constructor },
@@ -90,9 +115,16 @@ node Assign {
     }
 };
 
+node Declarations {
+    children {
+        Declaration decl {constructor, mandatory},
+        Declarations netx { constructor}
+    }
+};
+
 node Declaration {
     children {
-        Expr expr { constructor, mandatory }
+        Expr expr { constructor }
     },
 
     attributes {
@@ -101,9 +133,17 @@ node Declaration {
     }
 };
 
-node Voiddeclaration {
-    attributes{
-        DeclarationType type {constructor}
+node Params {
+    children {
+        Param param {constructor, mandatory},
+        Params params { constructor}
+    }
+};
+
+node Param {
+    attributes {
+        DeclarationType type { constructor},
+        string name { constructor}
     }
 };
 

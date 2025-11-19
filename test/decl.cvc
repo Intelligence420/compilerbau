@@ -9,7 +9,7 @@ if (true) {
     int z = 2;
 }
 
-float s = 3.0;
+float s;
 
 if (2 == 3) {
     float d = 2.5;
@@ -17,3 +17,13 @@ if (2 == 3) {
 } else {
     float g = 2.5;
 }
+
+int hallo (a)
+/* {
+    if (2 == 3) {
+    float d = 2.5;
+    d = (a + d);
+    } else {
+        float g = 2.5;
+    }
+} */
