@@ -1,15 +1,15 @@
 int a = 3;
-// int a = 3;
 float b = 23412.5;
  
 bool c = false;
 int d = (2 + 2);
 
-if (true) {
+
+if ( 2+2 ) {
     int z = 2;
+
 }
 
-float s;
 
 if (2 == 3) {
     float d = 2.5;
@@ -50,12 +50,11 @@ for (int k = 0, k < 3, (k + 1)) {
     int m = k;
 }
 
-int hallo (a)
-/* {
+int hallo(int a){
     if (2 == 3) {
     float d = 2.5;
     d = (a + d);
     } else {
         float g = 2.5;
     }
-} */
+} 

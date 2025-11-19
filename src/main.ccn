@@ -50,6 +50,7 @@ root node Program {
 
 node Block {
     children{
+        Declarations decl { constructor},
         Stmts stmts { constructor }  
     }
 };
