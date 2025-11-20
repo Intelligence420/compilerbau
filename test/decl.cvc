@@ -81,10 +81,10 @@ bool funcC(float f) {
     }
 }
 
-int funcD(int a int b) {
+int funcD(int a, int b) {
     
 }
 
-int funcE(int a,) {
+int funcE(int a) {
     
 }

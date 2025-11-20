@@ -35,7 +35,7 @@ void AddLocToNode(node_st *node, void *begin_loc, void *end_loc);
 
 %token BRACKET_L BRACKET_R COMMA SEMICOLON CURLBRACKET_L CURLBRACKET_R
 %token MINUS PLUS STAR SLASH PERCENT LE LT GE GT EQ NE OR AND
-%token TRUEVAL FALSEVAL LET 
+%token TRUEVAL FALSEVAL LET RETURNSTATEMENT
 %token IFSTATEMENT ELSESTATEMENT
 %token WHILESTATEMENT DOSTATEMENT FORSTATEMENT
 %token INTTYPE FLOATTYPE BOOLTYPE VOIDTYPE
@@ -48,7 +48,7 @@ void AddLocToNode(node_st *node, void *begin_loc, void *end_loc);
 %type <node> intval floatval boolval constant expr declarations
 %type <node> funcdef funcheader funcbody funcparamdef
 %type <node> stmts stmt declaration assign varlet program ifstatement block param params
-%type <node> whilestatement dostatement forstatement
+%type <node> whilestatement dostatement forstatement returnstatement
 %type <cbinop> binop
 %type <ctype> decltype voidtype rettype
 
@@ -97,6 +97,9 @@ stmt: funcdef
       }
       | forstatement
       {
+        $$ = $1;
+      }
+      | returnstatement {
         $$ = $1;
       }
       ;
@@ -177,6 +180,10 @@ forstatement: FORSTATEMENT BRACKET_L INTTYPE ID[variable] LET expr[init] COMMA e
        }
        ;
 
+returnstatement: RETURNSTATEMENT expr[expr] SEMICOLON{
+    $$ = ASTreturnstatement($expr);
+}
+
 declarations: declaration declarations {
           $$ = ASTdeclarations($1, $2);
        }
@@ -234,7 +241,7 @@ expr: constant
     | BRACKET_L expr[experssion] BRACKET_R
     {
       $$ = $experssion;
-    }
+    } 
     ;
 
 block: CURLBRACKET_L declarations[decl] stmts[stmts] CURLBRACKET_R {

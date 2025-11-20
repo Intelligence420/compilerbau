@@ -264,6 +264,13 @@ node_st *PRTforstatement(node_st *node){
   return node;
 }
 
+node_st *PRTreturnstatement(node_st *node){
+  printf("retrun ");
+  TRAVexpr(node);
+  printf(";\n");
+  return node;
+}
+
 node_st *PRTblock(node_st *node) {
   printf("{\n");
   TRAVchildren(node);

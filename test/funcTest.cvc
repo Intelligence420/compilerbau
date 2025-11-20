@@ -11,10 +11,10 @@ void hallo(int a, float b) {
     }
 }
 
-int b ( ){
+int b (int g){
     if (1) {
-        
+        return n;
     } else {
-        
+        return 3+2;
     }
 }
