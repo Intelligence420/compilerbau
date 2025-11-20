@@ -82,7 +82,7 @@ node_st *PRTfuncheader(node_st *node){
 }
 
 node_st *PRTfuncbody(node_st *node){
-  printf("{\n");
+  printf("\n{\n");
   TRAVchildren(node);
   printf("}\n");
   return node;
