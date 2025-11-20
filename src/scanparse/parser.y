@@ -130,6 +130,12 @@ funcbody: declarations stmts {
         }
         | stmts  {
           $$ = ASTfuncbody(NULL, $1);
+        }
+        | declarations {
+          $$ = ASTfuncbody($1, NULL);
+        } 
+        | {
+          $$ = ASTfuncbody(NULL, NULL);
         };
 
 param: decltype[type] ID[name] COMMA {
@@ -137,6 +143,9 @@ param: decltype[type] ID[name] COMMA {
         }
         | decltype[type] ID[name] {
           $$ = ASTparam($type, $name);
+        } 
+        | {
+          $$ = NULL;
         };
 
 ifstatement: IFSTATEMENT BRACKET_L expr[expr] BRACKET_R block[block] ELSESTATEMENT block[block2] {
