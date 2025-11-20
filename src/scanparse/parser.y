@@ -34,7 +34,7 @@ void AddLocToNode(node_st *node, void *begin_loc, void *end_loc);
 %locations
 
 %token BRACKET_L BRACKET_R COMMA SEMICOLON CURLBRACKET_L CURLBRACKET_R SQUAREBRACKET_L SQUAREBRACKET_R
-%token MINUS PLUS STAR SLASH PERCENT LE LT GE GT EQ NE OR AND NOT
+%token MINUS PLUS STAR SLASH PERCENT LE LT GE GT EQ NE OR AND NOT UMINUS
 %token TRUEVAL FALSEVAL LET 
 %token IFSTATEMENT ELSESTATEMENT
 %token WHILESTATEMENT DOSTATEMENT FORSTATEMENT
@@ -254,8 +254,8 @@ LogicalOp: OR    { $$ = BO_or; }
          | AND   { $$ = BO_and; }
          ;
 
-MonOp: NOT  { $$ = BO_not; }
-    |  MINUS { $$ = BO_uminus; }
+MonOp: NOT  { $$ = MO_not; }
+    |  UMINUS { $$ = MO_uminus; }
      ;
 
 %%
