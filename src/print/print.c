@@ -127,7 +127,6 @@ node_st *PRTparam(node_st *node){
 node_st *PRTbinop(node_st *node)
 {
     char *tmp = NULL;
-    printf( "(");
 
     TRAVleft(node);
 
@@ -179,7 +178,6 @@ node_st *PRTbinop(node_st *node)
 
     TRAVright(node);
 
-    printf( ")");
 
     return node;
 }
@@ -204,9 +202,9 @@ node_st *PRTdeclaration(node_st *node) {
 }
 
 node_st *PRTifstatement(node_st *node){
-  printf("if ");
+  printf("if (");
   TRAVexpr(node);
-  printf("\n");
+  printf(")\n");
 
   TRAVblock(node);
 
@@ -214,9 +212,9 @@ node_st *PRTifstatement(node_st *node){
 }
 
 node_st *PRTifelsestatement(node_st *node){
-  printf("if ");
+  printf("if (");
   TRAVexpr(node);
-  printf("\n");
+  printf(")\n");
 
   TRAVifblock(node);
 

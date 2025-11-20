@@ -239,8 +239,11 @@ block: CURLBRACKET_L declarations[decl] stmts[stmts] CURLBRACKET_R {
       | CURLBRACKET_L declarations[decl] CURLBRACKET_R {
       $$ = ASTblock($decl, NULL);
       }
-      |CURLBRACKET_L stmts[stmts] CURLBRACKET_R {
+      | CURLBRACKET_L stmts[stmts] CURLBRACKET_R {
       $$ = ASTblock(NULL, $stmts);
+      }
+      | CURLBRACKET_L CURLBRACKET_R {
+        $$ = ASTblock(NULL, NULL);
       };
 
 constant: floatval
