@@ -63,7 +63,6 @@ int yycolumn = 1;
 "||"                       { FILTER( OR);    }
 
 "!"                        { FILTER( NOT);    }
-"-"                        { FILTER( UMINUS); }
 
 "="                        { FILTER( LET);    }
 
