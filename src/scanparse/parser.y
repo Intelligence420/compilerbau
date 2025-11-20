@@ -48,7 +48,7 @@ void AddLocToNode(node_st *node, void *begin_loc, void *end_loc);
 %type <node> intval floatval boolval constant expr
 %type <node> stmts stmt declaration assign varlet program voiddeclaration ifstatement block
 %type <node> whilestatement dostatement forstatement
-%type <cbinop> binop
+%type <cbinop> binop ArithOp RelOp LogicalOp MonOp
 %type <ctype> decltype voidtype
 
 %start program
