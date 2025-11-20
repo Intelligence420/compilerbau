@@ -40,10 +40,12 @@ int yycolumn = 1;
 
 "("                        { FILTER( BRACKET_L); }
 ")"                        { FILTER( BRACKET_R); }
-"{"                         { FILTER(CURLBRACKET_L);}
-"}"                         { FILTER(CURLBRACKET_R);}
+"{"                        { FILTER(CURLBRACKET_L);}
+"}"                        { FILTER(CURLBRACKET_R);}
 ","                        { FILTER( COMMA); }
 ";"                        { FILTER( SEMICOLON); }
+"["                        { FILTER( SQUAREBRACKET_L); }
+"]"                        { FILTER( SQUAREBRACKET_R); }
 
 "-"                        { FILTER( MINUS); }
 "+"                        { FILTER( PLUS);  }
@@ -59,6 +61,8 @@ int yycolumn = 1;
 "!="                       { FILTER( NE);    }
 "&&"                       { FILTER( AND);    }
 "||"                       { FILTER( OR);    }
+
+"!"                        { FILTER( NOT);    }
 
 "="                        { FILTER( LET);    }
 

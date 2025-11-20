@@ -33,8 +33,8 @@ void AddLocToNode(node_st *node, void *begin_loc, void *end_loc);
 
 %locations
 
-%token BRACKET_L BRACKET_R COMMA SEMICOLON CURLBRACKET_L CURLBRACKET_R
-%token MINUS PLUS STAR SLASH PERCENT LE LT GE GT EQ NE OR AND
+%token BRACKET_L BRACKET_R COMMA SEMICOLON CURLBRACKET_L CURLBRACKET_R SQUAREBRACKET_L SQUAREBRACKET_R
+%token MINUS PLUS STAR SLASH PERCENT LE LT GE GT EQ NE OR AND NOT
 %token TRUEVAL FALSEVAL LET 
 %token IFSTATEMENT ELSESTATEMENT
 %token WHILESTATEMENT DOSTATEMENT FORSTATEMENT
@@ -221,19 +221,41 @@ boolval: TRUEVAL
          }
        ;
 
-binop: PLUS      { $$ = BO_add; }
-     | MINUS     { $$ = BO_sub; }
-     | STAR      { $$ = BO_mul; }
-     | SLASH     { $$ = BO_div; }
-     | PERCENT   { $$ = BO_mod; }
-     | LE        { $$ = BO_le; }
-     | LT        { $$ = BO_lt; }
-     | GE        { $$ = BO_ge; }
-     | GT        { $$ = BO_gt; }
-     | EQ        { $$ = BO_eq; }
-     | NE        { $$ = BO_ne; }
-     | OR        { $$ = BO_or; }
-     | AND       { $$ = BO_and; }
+binop: ArithOp
+      {
+        $$ = $1;
+      }
+    | RelOp
+      { 
+        $$ = $1; 
+      }
+    | LogicalOp
+      { 
+        $$ = $1; 
+      }
+     ;
+
+ArithOp:  PLUS    { $$ = BO_add; }
+        | MINUS   { $$ = BO_sub; }
+        | STAR    { $$ = BO_mul; }
+        | SLASH   { $$ = BO_div; }
+        | PERCENT { $$ = BO_mod; }
+        ;
+
+RelOp:  LE      { $$ = BO_le; }
+      | LT      { $$ = BO_lt; }
+      | GE      { $$ = BO_ge; }
+      | GT      { $$ = BO_gt; }
+      | EQ      { $$ = BO_eq; }
+      | NE      { $$ = BO_ne; }
+      ;
+
+LogicalOp: OR    { $$ = BO_or; }
+         | AND   { $$ = BO_and; }
+         ;
+
+MonOp: NOT  { $$ = BO_not; }
+    |  MINUS { $$ = BO_uminus; }
      ;
 
 %%
