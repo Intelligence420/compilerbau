@@ -65,7 +65,7 @@ node Stmts {
 node Funcdef {
     children {
         Funcheader funcheader {constructor, mandatory},
-        Funcbody funcbody { constructor}
+        Funcbody funcbody { constructor, mandatory}
     }
 };
 

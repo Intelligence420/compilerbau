@@ -47,7 +47,7 @@ void AddLocToNode(node_st *node, void *begin_loc, void *end_loc);
 
 %type <node> intval floatval boolval constant expr declarations
 %type <node> funcdef funcheader funcbody funcparamdef
-%type <node> stmts stmt declaration assign varlet program ifstatement block param
+%type <node> stmts stmt declaration assign varlet program ifstatement block param params
 %type <node> whilestatement dostatement forstatement
 %type <cbinop> binop
 %type <ctype> decltype voidtype rettype
@@ -105,11 +105,11 @@ funcdef: funcheader[header] CURLBRACKET_L funcbody[funcbody] CURLBRACKET_R
                  {
                     $$ = ASTfuncdef($header, $funcbody);
 
-                  }
+                  };
 
 funcheader: rettype[type] ID[funcname] BRACKET_L funcparamdef[funcparam] BRACKET_R {
           $$ = ASTfuncheader($funcparam, $type, $funcname);
-        }
+        };
 
 rettype: voidtype {
           $$ = $1;
@@ -118,11 +118,14 @@ rettype: voidtype {
         $$ = $1;
         };
 
-funcparamdef: param funcparamdef {
-              $$ = ASTparams($1, $2);
+funcparamdef: param COMMA params {
+              $$ = ASTparams($1, $3);
             }
             | param {
               $$ = ASTparams($1, NULL);
+            }
+            |  {
+              $$ = ASTparams(NULL, NULL);
             };
 
 funcbody: declarations stmts {
@@ -138,14 +141,15 @@ funcbody: declarations stmts {
           $$ = ASTfuncbody(NULL, NULL);
         };
 
-param: decltype[type] ID[name] COMMA {
-          $$ = ASTparam($type, $name);
+params: param params {
+          $$ = ASTparams($1, $2);
         }
-        | decltype[type] ID[name] {
+        | param {
+          $$ = ASTparams($1, NULL);
+        };
+
+param: decltype[type] ID[name] {
           $$ = ASTparam($type, $name);
-        } 
-        | {
-          $$ = NULL;
         };
 
 ifstatement: IFSTATEMENT BRACKET_L expr[expr] BRACKET_R block[block] ELSESTATEMENT block[block2] {

@@ -114,7 +114,6 @@ node_st *PRTparam(node_st *node){
     case TY_int: param_type = "int"; break;
     case TY_float: param_type = "float"; break;
     case TY_bool: param_type = "bool"; break;
-    case TY_void: param_type = "void"; break;
   }
 
   printf("%s %s", param_type, PARAM_NAME(node));
