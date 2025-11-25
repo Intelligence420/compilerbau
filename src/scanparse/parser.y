@@ -45,7 +45,7 @@ void AddLocToNode(node_st *node, void *begin_loc, void *end_loc);
 %token <cbool> BOOL
 %token <id> ID
 
-%type <node> intval floatval boolval constant expr
+%type <node> intval floatval boolval constant expr expr_array
 %type <node> stmts stmt declaration assign varlet program voiddeclaration ifstatement block
 %type <node> whilestatement dostatement forstatement
 %type <cbinop> binop ArithOp RelOp LogicalOp MonOp
@@ -162,13 +162,18 @@ varlet: ID
         }
         ;
 
-expr: constant
+expr: constant // constant expression
       {
         $$ = $1;
       }
-    | ID
+    | ID  // ID expression
       {
         $$ = ASTvar($1);
+      }
+    | ID BRACKET_L expr_array BRACKET_R
+      {
+        $$ = ASTarrayvar($1, $3);
+        AddLocToNode($$, &@1, &@4);
       }
     | expr[left] binop[type] expr[right]
       {
@@ -179,7 +184,27 @@ expr: constant
     {
       $$ = $experssion;
     }
+    | MonOp[type] expr[expression]
+      {
+        $$ = ASTmonop($expression, $type);
+        AddLocToNode($$, &@1, &@expression);
+      }
+    | BRACKET_L decltype[type] BRACKET_R expr[expression]
+      {
+        $$ = ASTtypecast($expression, $type);
+        AddLocToNode($$, &@1, &@expression);
+      }
     ;
+
+expr_array: expr COMMA expr_array
+          {
+            $$ = ASTexprarray($1, $3);
+          }
+        | expr
+          {
+            $$ = ASTexprarray($1, NULL);
+          }
+        ;
 
 block: CURLBRACKET_L stmts[stmts] CURLBRACKET_R {
       $$ = ASTblock($stmts);
@@ -255,7 +280,7 @@ LogicalOp: OR    { $$ = BO_or; }
          ;
 
 MonOp: NOT  { $$ = MO_not; }
-    |  MINUS { $$ = MO_uminus; }
+    |  MINUS { $$ = MO_neg; }
      ;
 
 %%
