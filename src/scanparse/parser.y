@@ -162,11 +162,11 @@ varlet: ID
         }
         ;
 
-expr: constant // constant expression
+expr: constant 
       {
         $$ = $1;
       }
-    | ID  // ID expression
+    | ID  
       {
         $$ = ASTvar($1);
       }
