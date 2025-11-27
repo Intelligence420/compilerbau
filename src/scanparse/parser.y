@@ -33,8 +33,8 @@ void AddLocToNode(node_st *node, void *begin_loc, void *end_loc);
 
 %locations
 
-%token BRACKET_L BRACKET_R COMMA SEMICOLON CURLBRACKET_L CURLBRACKET_R
-%token MINUS PLUS STAR SLASH PERCENT LE LT GE GT EQ NE OR AND
+%token BRACKET_L BRACKET_R COMMA SEMICOLON CURLBRACKET_L CURLBRACKET_R SQUAREBRACKET_L SQUAREBRACKET_R
+%token MINUS PLUS STAR SLASH PERCENT LE LT GE GT EQ NE OR AND NOT
 %token TRUEVAL FALSEVAL LET RETURNSTATEMENT
 %token IFSTATEMENT ELSESTATEMENT
 %token WHILESTATEMENT DOSTATEMENT FORSTATEMENT
@@ -45,11 +45,11 @@ void AddLocToNode(node_st *node, void *begin_loc, void *end_loc);
 %token <cbool> BOOL
 %token <id> ID
 
-%type <node> intval floatval boolval constant expr declarations
+%type <node> intval floatval boolval constant expr declarations expr_array
 %type <node> funcdef funcheader funcbody funcparamdef
 %type <node> stmts stmt declaration assign varlet program ifstatement block param params
 %type <node> whilestatement dostatement forstatement returnstatement
-%type <cbinop> binop
+%type <cbinop> binop ArithOp RelOp LogicalOp MonOp
 %type <ctype> decltype voidtype rettype
 
 %start program
@@ -139,7 +139,7 @@ funcbody: declarations stmts {
         }
         | declarations {
           $$ = ASTfuncbody($1, NULL);
-        } 
+        }
         | {
           $$ = ASTfuncbody(NULL, NULL);
         };
@@ -233,6 +233,11 @@ expr: constant
       {
         $$ = ASTvar($1);
       }
+    | ID BRACKET_L expr_array BRACKET_R
+      {
+        $$ = ASTarrayvar($1, $3);
+        AddLocToNode($$, &@1, &@4);
+      }
     | expr[left] binop[type] expr[right]
       {
         $$ = ASTbinop( $left, $right, $type);
@@ -241,8 +246,28 @@ expr: constant
     | BRACKET_L expr[experssion] BRACKET_R
     {
       $$ = $experssion;
-    } 
+    }
+    | MonOp[type] expr[expression]
+      {
+        $$ = ASTmonop($expression, $type);
+        AddLocToNode($$, &@1, &@expression);
+      }
+    | BRACKET_L decltype[type] BRACKET_R expr[expression]
+      {
+        $$ = ASTtypecast($expression, $type);
+        AddLocToNode($$, &@1, &@expression);
+      }
     ;
+
+expr_array: expr COMMA expr_array
+          {
+            $$ = ASTexprarray($1, $3);
+          }
+        | expr
+          {
+            $$ = ASTexprarray($1, NULL);
+          }
+        ;
 
 block: CURLBRACKET_L declarations[decl] stmts[stmts] CURLBRACKET_R {
       $$ = ASTblock($decl, $stmts);
@@ -293,19 +318,41 @@ boolval: TRUEVAL
          }
        ;
 
-binop: PLUS      { $$ = BO_add; }
-     | MINUS     { $$ = BO_sub; }
-     | STAR      { $$ = BO_mul; }
-     | SLASH     { $$ = BO_div; }
-     | PERCENT   { $$ = BO_mod; }
-     | LE        { $$ = BO_le; }
-     | LT        { $$ = BO_lt; }
-     | GE        { $$ = BO_ge; }
-     | GT        { $$ = BO_gt; }
-     | EQ        { $$ = BO_eq; }
-     | NE        { $$ = BO_ne; }
-     | OR        { $$ = BO_or; }
-     | AND       { $$ = BO_and; }
+binop: ArithOp
+      {
+        $$ = $1;
+      }
+    | RelOp
+      {
+        $$ = $1;
+      }
+    | LogicalOp
+      {
+        $$ = $1;
+      }
+     ;
+
+ArithOp:  PLUS    { $$ = BO_add; }
+        | MINUS   { $$ = BO_sub; }
+        | STAR    { $$ = BO_mul; }
+        | SLASH   { $$ = BO_div; }
+        | PERCENT { $$ = BO_mod; }
+        ;
+
+RelOp:  LE      { $$ = BO_le; }
+      | LT      { $$ = BO_lt; }
+      | GE      { $$ = BO_ge; }
+      | GT      { $$ = BO_gt; }
+      | EQ      { $$ = BO_eq; }
+      | NE      { $$ = BO_ne; }
+      ;
+
+LogicalOp: OR    { $$ = BO_or; }
+         | AND   { $$ = BO_and; }
+         ;
+
+MonOp: NOT  { $$ = MO_not; }
+    |  MINUS { $$ = MO_neg; }
      ;
 
 %%
