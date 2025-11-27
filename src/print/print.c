@@ -8,6 +8,7 @@
  */
 
 #include "ccn/ccn.h"
+#include "ccn/dynamic_core.h"
 #include "ccngen/ast.h"
 #include "ccngen/trav.h"
 #include "palm/dbug.h"
@@ -111,6 +112,78 @@ node_st *PRTbinop(node_st *node)
     printf( ")");
 
     return node;
+} 
+
+node_st *PRTmonop(node_st *node)
+{
+    char *tmp = NULL;
+    printf( "(");
+
+    switch (MONOP_OP(node)) {
+    case MO_not:
+      tmp = "!";
+      break;
+    case MO_neg:
+      tmp = "-";
+      break;
+    case MO_NULL:
+      DBUG_ASSERT(false, "unknown monop detected!");
+    }
+
+    printf( "%s", tmp);
+
+    TRAVexpr(node);
+
+    printf( ")");
+
+    return node;
+}
+
+node_st *PRTarrayvar(node_st *node)
+{
+    printf( "%s[", ARRAYVAR_NAME(node));
+    TRAVindex(node);
+    printf( "]");
+
+    return node;
+}
+
+node_st *PRTexprarray(node_st *node)
+{
+    node_st *element = EXPRARRAY_ELEMENT(node);
+    node_st *next = EXPRARRAY_NEXT(node);
+
+    TRAVexpr(element);
+
+    if (next != NULL) {
+        printf(", ");
+        TRAVchildren(next);
+    }
+
+    return node;
+}
+
+node_st *PRTtypecast(node_st *node)
+{
+    char *tmp = NULL;
+    switch (TYPECAST_TYPE(node)) {
+    case TY_int:
+      tmp = "int";
+      break;
+    case TY_float:
+      tmp = "float";
+      break;
+    case TY_bool:
+      tmp = "bool";
+      break;
+    default:
+      DBUG_ASSERT(false, "unknown typecast detected!");
+    }
+
+    printf( "(%s) ", tmp);
+    TRAVexpr(node);
+
+    return node;
 }
 
 node_st *PRTdeclaration(node_st *node) {
@@ -161,9 +234,9 @@ node_st *PRTifelsestatement(node_st *node){
 }
 
 node_st *PRTwhilestatement(node_st *node){
-  printf("while \n");
+  printf("while (");
   TRAVexpr(node);
-  printf("\n");
+  printf(") \n");
 
   TRAVblock(node);
 
@@ -175,9 +248,9 @@ node_st *PRTdostatement(node_st *node){
 
   TRAVblock(node);
 
-  printf("while ");
+  printf("while (");
   TRAVexpr(node);
-  printf(";\n");
+  printf(");\n");
 
   return node;
 }

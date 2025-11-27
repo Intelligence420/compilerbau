@@ -35,7 +35,7 @@ enum DeclarationType {
     }
 };
 
-nodeset Expr = {Num, Float, Bool, Binop, Var};
+nodeset Expr = {Num, Float, Bool, Binop, Var, Monop, Arrayvar, Exprarray , typecast};
 nodeset Stmt = {Assign, Declaration, Voiddeclaration, Ifstatement, Ifelsestatement, Whilestatement, Dostatement, Forstatement};
 
 // Nodes you want to be able to link to from your symbol table.
@@ -136,6 +136,42 @@ node Binop {
 
     attributes {
         BinOpType op { constructor }
+    }
+};
+
+node Monop {
+    children {
+        Expr expr { constructor, mandatory }
+    },
+
+    attributes {
+        MonOpType op { constructor }
+    }
+};
+
+node Arrayvar {
+    children {
+        Expr index { constructor, mandatory }
+    },
+    attributes {
+        string name { constructor }
+    }
+};
+
+node Exprarray {
+    children {
+        Expr element { constructor, mandatory },
+        Exprarray next { constructor }
+    }
+};
+
+node typecast {
+    children {
+        Expr expression { constructor, mandatory }
+    },
+
+    attributes {
+        DeclarationType type { constructor }
     }
 };
 
