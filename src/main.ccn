@@ -35,23 +35,16 @@ enum DeclarationType {
     }
 };
 
-nodeset Expr = {Num, Float, Bool, Binop, Var, Monop, Arrayvar, Exprarray , typecast};
-nodeset Stmt = {Assign, Ifstatement, Ifelsestatement, Funcdef, Whilestatement, Dostatement, Forstatement, Returnstatement};
+nodeset Decl = {FunDef};
+nodeset Stmt = {Assign, Ifstatement, Ifelsestatement, Whilestatement, Dostatement, Forstatement, Returnstatement};
+nodeset Expr = {Num, Float, Bool, Binop, Var, Monop, FunCall, TypeCast};
 
 // Nodes you want to be able to link to from your symbol table.
 nodeset Link = Expr | Stmt;
 
 root node Program {
     children {
-        Declarations decl { constructor},
-        Stmts stmts { constructor, mandatory }
-    }
-};
-
-node Block {
-    children{
-        Declarations decl { constructor},
-        Stmts stmts { constructor }
+        Decls decls { constructor, mandatory }
     }
 };
 
@@ -62,27 +55,41 @@ node Stmts {
     }
 };
 
-node Funcdef {
+node FunDef {
     children {
-        Funcheader funcheader {constructor, mandatory},
-        Funcbody funcbody { constructor, mandatory}
+        FunHeader header { constructor, mandatory },
+        FunBody body { constructor, mandatory }
     }
 };
 
-node Funcheader {
+node FunHeader {
     children {
-        Params params {constructor}
+        Params params { constructor }
     },
+
     attributes {
         DeclarationType type { constructor },
-        string name {constructor}
+        string name { constructor }
     }
 };
 
-node Funcbody {
+node FunBody {
     children {
-        Declarations decl { constructor },
-        Stmts stmts {constructor}
+        VarDecs decl { constructor },
+        Stmts stmts { constructor }
+    }
+};
+
+node Decls {
+    children {
+        Decl decl { constructor, mandatory },
+        Decls next { constructor }
+    }
+};
+
+node Block {
+    children {
+        Stmts stmts { constructor }
     }
 };
 
@@ -93,14 +100,14 @@ node Assign {
     }
 };
 
-node Declarations {
+node VarDecs {
     children {
-        Declaration decl {constructor, mandatory},
-        Declarations netx { constructor}
+        VarDec dec { constructor, mandatory },
+        VarDecs next { constructor }
     }
 };
 
-node Declaration {
+node VarDec {
     children {
         Expr expr { constructor }
     },
@@ -113,15 +120,15 @@ node Declaration {
 
 node Params {
     children {
-        Param param {constructor},
-        Params params { constructor}
+        Param param { constructor, mandatory },
+        Params params { constructor }
     }
 };
 
 node Param {
     attributes {
-        DeclarationType type { constructor},
-        string name { constructor}
+        DeclarationType type { constructor },
+        string name { constructor, mandatory }
     }
 };
 
@@ -196,23 +203,24 @@ node Monop {
     }
 };
 
-node Arrayvar {
+node FunCall {
     children {
-        Expr index { constructor, mandatory }
+        Exprs exprs { constructor }
     },
+
     attributes {
         string name { constructor }
     }
 };
 
-node Exprarray {
+node Exprs {
     children {
-        Expr element { constructor, mandatory },
-        Exprarray next { constructor }
+        Expr expr { constructor, mandatory },
+        Exprs next { constructor }
     }
 };
 
-node typecast {
+node TypeCast {
     children {
         Expr expression { constructor, mandatory }
     },
