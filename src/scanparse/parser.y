@@ -35,7 +35,7 @@ void AddLocToNode(node_st *node, void *begin_loc, void *end_loc);
 
 %token BRACKET_L BRACKET_R COMMA SEMICOLON CURLBRACKET_L CURLBRACKET_R SQUAREBRACKET_L SQUAREBRACKET_R
 %token MINUS PLUS STAR SLASH PERCENT LE LT GE GT EQ NE OR AND NOT
-%token TRUEVAL FALSEVAL LET 
+%token TRUEVAL FALSEVAL LET RETURNSTATEMENT
 %token IFSTATEMENT ELSESTATEMENT
 %token WHILESTATEMENT DOSTATEMENT FORSTATEMENT
 %token INTTYPE FLOATTYPE BOOLTYPE VOIDTYPE
@@ -45,19 +45,23 @@ void AddLocToNode(node_st *node, void *begin_loc, void *end_loc);
 %token <cbool> BOOL
 %token <id> ID
 
-%type <node> intval floatval boolval constant expr expr_array
-%type <node> stmts stmt declaration assign varlet program voiddeclaration ifstatement block
-%type <node> whilestatement dostatement forstatement
+%type <node> intval floatval boolval constant expr declarations expr_array
+%type <node> funcdef funcheader funcbody funcparamdef
+%type <node> stmts stmt declaration assign varlet program ifstatement block param params
+%type <node> whilestatement dostatement forstatement returnstatement
 %type <cbinop> binop ArithOp RelOp LogicalOp MonOp
-%type <ctype> decltype voidtype
+%type <ctype> decltype voidtype rettype
 
 %start program
 
 %%
 
-program: stmts
+program: declarations stmts {
+          parseresult = ASTprogram($1, $2);
+        }
+        |stmts
          {
-           parseresult = ASTprogram($1);
+           parseresult = ASTprogram(NULL, $1);
          }
          ;
 
@@ -71,16 +75,11 @@ stmts: stmt stmts
         }
         ;
 
-stmt: assign
+stmt: funcdef
        {
-         $$ = $1;
+        $$ = $1;
        }
-       |
-       declaration
-       {
-         $$ = $1;
-       }
-       | voiddeclaration
+      | assign
        {
          $$ = $1;
        }
@@ -89,18 +88,72 @@ stmt: assign
         $$ = $1;
        }
        | whilestatement
-       {
+      {
+        $$ = $1;
+      }
+      | dostatement
+      {
          $$ = $1;
-       }
-       | dostatement
-       {
+      }
+      | forstatement
+      {
+        $$ = $1;
+      }
+      | returnstatement {
+        $$ = $1;
+      }
+      ;
+
+funcdef: funcheader[header] CURLBRACKET_L funcbody[funcbody] CURLBRACKET_R
+                 {
+                    $$ = ASTfuncdef($header, $funcbody);
+
+                  };
+
+funcheader: rettype[type] ID[funcname] BRACKET_L funcparamdef[funcparam] BRACKET_R {
+          $$ = ASTfuncheader($funcparam, $type, $funcname);
+        };
+
+rettype: voidtype {
           $$ = $1;
-       }
-       | forstatement
-       {
-         $$ = $1;
-       }
-       ;
+        }
+       | decltype {
+        $$ = $1;
+        };
+
+funcparamdef: param COMMA params {
+              $$ = ASTparams($1, $3);
+            }
+            | param {
+              $$ = ASTparams($1, NULL);
+            }
+            |  {
+              $$ = ASTparams(NULL, NULL);
+            };
+
+funcbody: declarations stmts {
+          $$ = ASTfuncbody($1, $2);
+        }
+        | stmts  {
+          $$ = ASTfuncbody(NULL, $1);
+        }
+        | declarations {
+          $$ = ASTfuncbody($1, NULL);
+        }
+        | {
+          $$ = ASTfuncbody(NULL, NULL);
+        };
+
+params: param params {
+          $$ = ASTparams($1, $2);
+        }
+        | param {
+          $$ = ASTparams($1, NULL);
+        };
+
+param: decltype[type] ID[name] {
+          $$ = ASTparam($type, $name);
+        };
 
 ifstatement: IFSTATEMENT BRACKET_L expr[expr] BRACKET_R block[block] ELSESTATEMENT block[block2] {
           $$ = ASTifelsestatement($block, $expr, $block2);
@@ -111,7 +164,7 @@ ifstatement: IFSTATEMENT BRACKET_L expr[expr] BRACKET_R block[block] ELSESTATEME
         ;
 
 whilestatement: WHILESTATEMENT BRACKET_L expr[expr] BRACKET_R block[block] {
-          $$ = ASTwhilestatement($block, $expr);      
+          $$ = ASTwhilestatement($block, $expr);
         }
         ;
 
@@ -127,6 +180,17 @@ forstatement: FORSTATEMENT BRACKET_L INTTYPE ID[variable] LET expr[init] COMMA e
        }
        ;
 
+returnstatement: RETURNSTATEMENT expr[expr] SEMICOLON{
+    $$ = ASTreturnstatement($expr);
+}
+
+declarations: declaration declarations {
+          $$ = ASTdeclarations($1, $2);
+       }
+       | declaration {
+          $$ = ASTdeclarations($1, NULL);
+       }
+
 declaration: decltype[type] ID[name] LET constant[expr] SEMICOLON
        {
           $$ = ASTdeclaration($expr, $type, $name);
@@ -134,18 +198,17 @@ declaration: decltype[type] ID[name] LET constant[expr] SEMICOLON
        | decltype[type] ID[name] LET expr[expr] SEMICOLON
        {
           $$ = ASTdeclaration($expr, $type, $name);
-       };
-
+       }
+       | decltype[type] ID[name] SEMICOLON
+       {
+          $$ = ASTdeclaration(NULL, $type, $name);
+       }
+       ;
 
 decltype: INTTYPE { $$ = TY_int; }
     | FLOATTYPE { $$ = TY_float; }
     | BOOLTYPE { $$ = TY_bool; }
     ;
-
-voiddeclaration: voidtype[type] SEMICOLON
-       {
-        $$ = ASTvoiddeclaration($type);
-       };
 
 voidtype: VOIDTYPE { $$ = TY_void; };
 
@@ -162,11 +225,11 @@ varlet: ID
         }
         ;
 
-expr: constant 
+expr: constant
       {
         $$ = $1;
       }
-    | ID  
+    | ID
       {
         $$ = ASTvar($1);
       }
@@ -206,8 +269,17 @@ expr_array: expr COMMA expr_array
           }
         ;
 
-block: CURLBRACKET_L stmts[stmts] CURLBRACKET_R {
-      $$ = ASTblock($stmts);
+block: CURLBRACKET_L declarations[decl] stmts[stmts] CURLBRACKET_R {
+      $$ = ASTblock($decl, $stmts);
+      }
+      | CURLBRACKET_L declarations[decl] CURLBRACKET_R {
+      $$ = ASTblock($decl, NULL);
+      }
+      | CURLBRACKET_L stmts[stmts] CURLBRACKET_R {
+      $$ = ASTblock(NULL, $stmts);
+      }
+      | CURLBRACKET_L CURLBRACKET_R {
+        $$ = ASTblock(NULL, NULL);
       };
 
 constant: floatval
@@ -251,12 +323,12 @@ binop: ArithOp
         $$ = $1;
       }
     | RelOp
-      { 
-        $$ = $1; 
+      {
+        $$ = $1;
       }
     | LogicalOp
-      { 
-        $$ = $1; 
+      {
+        $$ = $1;
       }
      ;
 

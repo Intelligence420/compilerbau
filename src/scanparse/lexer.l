@@ -81,6 +81,8 @@ int yycolumn = 1;
 "bool"                      { FILTER ( BOOLTYPE); }
 "void"                      { FILTER ( VOIDTYPE); }
 
+"return"                    { FILTER( RETURNSTATEMENT);}
+
 [A-Za-z][A-Za-z0-9_]*      { yylval.id = STRcpy(yytext);
                              FILTER( ID);
                            }

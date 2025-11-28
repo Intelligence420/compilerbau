@@ -19,8 +19,13 @@
  */
 node_st *PRTprogram(node_st *node)
 {
-    TRAVstmts(node);
+    TRAVchildren(node);
     return node;
+}
+
+node_st *PRTgobaldecl(node_st *node){
+  TRAVchildren(node);
+  return node;
 }
 
 /**
@@ -51,13 +56,77 @@ node_st *PRTassign(node_st *node)
     return node;
 }
 
+node_st *PRTfuncdef(node_st *node){
+  
+  
+  TRAVfuncheader(node);
+  TRAVfuncbody(node);
+
+  return node;
+}
+
+node_st *PRTfuncheader(node_st *node){
+  char *decl_type = NULL;
+
+  switch (FUNCHEADER_TYPE(node)) {
+    case TY_int: decl_type = "int"; break;
+    case TY_float: decl_type = "float"; break;
+    case TY_bool: decl_type = "bool"; break;
+    case TY_void: decl_type = "void"; break;
+  }
+
+  printf("%s %s", decl_type, FUNCHEADER_NAME(node));
+  printf("(");
+  TRAVparams(node);
+  printf(") ");
+  return node;
+}
+
+node_st *PRTfuncbody(node_st *node){
+  printf("\n{\n");
+  TRAVchildren(node);
+  printf("}\n");
+  return node;
+}
+
+node_st *PRTdeclarations(node_st *node){
+  TRAVchildren(node);
+  return node;
+}
+
+node_st *PRTparams(node_st *node){
+  TRAVparam(node);
+
+  /* Nur Komma drucken und rekursiv weitermachen, wenn noch ein weiteres Param-Node existiert */
+  if (PARAMS_PARAMS(node) != NULL) {
+    printf(", ");
+    TRAVparams(node);
+  }
+  
+
+  return node;
+}
+  
+
+node_st *PRTparam(node_st *node){
+  char *param_type = NULL;
+
+  switch (PARAM_TYPE(node)) {
+    case TY_int: param_type = "int"; break;
+    case TY_float: param_type = "float"; break;
+    case TY_bool: param_type = "bool"; break;
+  }
+
+  printf("%s %s", param_type, PARAM_NAME(node));
+  return node;
+}
+
 /**
  * @fn PRTbinop
  */
 node_st *PRTbinop(node_st *node)
 {
     char *tmp = NULL;
-    printf( "(");
 
     TRAVleft(node);
 
@@ -109,7 +178,6 @@ node_st *PRTbinop(node_st *node)
 
     TRAVright(node);
 
-    printf( ")");
 
     return node;
 } 
@@ -196,22 +264,19 @@ node_st *PRTdeclaration(node_st *node) {
     default: DBUG_ASSERT(false, "unknown decltype detected!");
   }
 
-  printf("%s %s = ", decltype, DECLARATION_NAME(node));
+  printf("%s %s", decltype, DECLARATION_NAME(node));
+  if (DECLARATION_EXPR(node) != NULL){
+    printf(" = ");
+  }
   TRAVchildren(node);
   printf(";\n");
   return node;
 }
 
-node_st *PRTvoiddeclaration(node_st *node){
-
-  printf("void;\n");
-  return node;
-}
-
 node_st *PRTifstatement(node_st *node){
-  printf("if ");
+  printf("if (");
   TRAVexpr(node);
-  printf("\n");
+  printf(")\n");
 
   TRAVblock(node);
 
@@ -219,9 +284,9 @@ node_st *PRTifstatement(node_st *node){
 }
 
 node_st *PRTifelsestatement(node_st *node){
-  printf("if ");
+  printf("if (");
   TRAVexpr(node);
-  printf("\n");
+  printf(")\n");
 
   TRAVifblock(node);
 
@@ -269,6 +334,13 @@ node_st *PRTforstatement(node_st *node){
 
   TRAVblock(node);
 
+  return node;
+}
+
+node_st *PRTreturnstatement(node_st *node){
+  printf("retrun ");
+  TRAVexpr(node);
+  printf(";\n");
   return node;
 }
 
