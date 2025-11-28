@@ -178,11 +178,7 @@ vardecs:
   | vardec         {  $$ = ASTvardecs($1, NULL); }
   ;
 
-vardec: decltype[type] ID[name] LET constant[expr] SEMICOLON
-       {
-          $$ = ASTvardec($expr, $type, $name);
-       }
-       | decltype[type] ID[name] LET expr[expr] SEMICOLON
+vardec: decltype[type] ID[name] LET expr[expr] SEMICOLON
        {
           $$ = ASTvardec($expr, $type, $name);
        }
