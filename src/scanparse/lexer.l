@@ -40,8 +40,8 @@ int yycolumn = 1;
 
 "("                        { FILTER( BRACKET_L); }
 ")"                        { FILTER( BRACKET_R); }
-"{"                        { FILTER(CURLBRACKET_L);}
-"}"                        { FILTER(CURLBRACKET_R);}
+"{"                        { FILTER( CURLBRACKET_L); }
+"}"                        { FILTER( CURLBRACKET_R); }
 ","                        { FILTER( COMMA); }
 ";"                        { FILTER( SEMICOLON); }
 "["                        { FILTER( SQUAREBRACKET_L); }
@@ -78,8 +78,11 @@ int yycolumn = 1;
 
 "int"                       { FILTER( INTTYPE); }
 "float"                     { FILTER( FLOATTYPE); }
-"bool"                      { FILTER ( BOOLTYPE); }
-"void"                      { FILTER ( VOIDTYPE); }
+"bool"                      { FILTER( BOOLTYPE); }
+"void"                      { FILTER( VOIDTYPE); }
+
+"extern"                    { FILTER( EXTERRN); }
+"export"                    { FILTER( EXPORRT); }
 
 "return"                    { FILTER( RETURNSTATEMENT);}
 
