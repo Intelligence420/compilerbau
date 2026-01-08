@@ -1,0 +1,16 @@
+void foo() {
+    int[3] a;
+    int b;
+
+    int x;
+    float y;
+    bool z;
+
+    b = a[0];
+    b = a[0.0];
+    b = a[false];
+
+    b = a[x];
+    b = a[y];
+    b = a[z];
+}

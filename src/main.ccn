@@ -3,7 +3,7 @@ start phase RootPhase {
 
     actions {
         pass SPdoScanParse;
-        print;
+        Print;
     }
 };
 
@@ -35,12 +35,9 @@ enum DeclarationType {
     }
 };
 
-nodeset Decl = {FunDef};
-nodeset Stmt = {Assign, Ifstatement, Ifelsestatement, Whilestatement, Dostatement, Forstatement, Returnstatement};
-nodeset Expr = {Num, Float, Bool, Binop, Var, Monop, FunCall, TypeCast};
-
-// Nodes you want to be able to link to from your symbol table.
-nodeset Link = Expr | Stmt;
+nodeset Decl = {FunDef, FunDec, GlobalDec, GlobalDef};
+nodeset Stmt = {Assign, FunCallStmt, Ifstatement, Ifelsestatement, Whilestatement, Dostatement, Forstatement, Returnstatement};
+nodeset Expr = {Num, Float, Bool, Binop, Var, Monop, FunCall, VarRef, TypeCast};
 
 root node Program {
     children {
@@ -59,6 +56,50 @@ node FunDef {
     children {
         FunHeader header { constructor, mandatory },
         FunBody body { constructor, mandatory }
+    },
+
+    attributes {
+        bool export { constructor }
+    }
+};
+
+node FunDec {
+    children {
+        FunHeader header { constructor, mandatory}
+    }
+};
+
+node GlobalDec {
+    children {
+        Ids ids { constructor }
+    },
+
+    attributes {
+        DeclarationType type { constructor },
+        string name { constructor }
+    }
+};
+
+node GlobalDef {
+    children {
+        VarDef dec { constructor, mandatory }
+    },
+
+    attributes {
+        bool export { constructor }
+    }
+};
+
+node LocalFundef {
+    children {
+        FunHeader header { constructor, mandatory },
+        FunBody body { constructor, mandatory }
+    }
+};
+
+node ArrExpr {
+    children {
+        Exprs exprs { constructor, mandatory }
     }
 };
 
@@ -75,7 +116,7 @@ node FunHeader {
 
 node FunBody {
     children {
-        VarDecs decl { constructor },
+        VarDefs decl { constructor },
         Stmts stmts { constructor }
     }
 };
@@ -95,26 +136,37 @@ node Block {
 
 node Assign {
     children {
-        VarLet let { constructor },
+        Var let { constructor },
         Expr expr { constructor, mandatory }
     }
 };
 
-node VarDecs {
+node VarDefs {
     children {
-        VarDec dec { constructor, mandatory },
-        VarDecs next { constructor }
+        VarDef dec { constructor, mandatory },
+        VarDefs next { constructor }
     }
 };
 
-node VarDec {
+node VarDef {
     children {
-        Expr expr { constructor }
+        Expr expr { constructor },
+        Exprs exprs { constructor }
     },
 
     attributes {
         DeclarationType type { constructor },
         string name { constructor }
+    }
+};
+
+node Ids {
+    children {
+        Ids next { constructor }
+    },
+
+    attributes {
+        string id { constructor, mandatory } 
     }
 };
 
@@ -126,6 +178,10 @@ node Params {
 };
 
 node Param {
+    children {
+        Ids ids { constructor }
+    },
+
     attributes {
         DeclarationType type { constructor },
         string name { constructor, mandatory }
@@ -182,6 +238,18 @@ node Returnstatement {
     }
 };
 
+node FunCallStmt {
+    children {
+        FunCall call { constructor, mandatory }
+    }
+};
+
+node VarRef {
+    children {
+        Var var { constructor, mandatory }
+    }
+};
+
 node Binop {
     children {
         Expr left { constructor, mandatory },
@@ -222,28 +290,13 @@ node Exprs {
 
 node TypeCast {
     children {
-        Expr expression { constructor, mandatory }
+        Expr expr { constructor, mandatory }
     },
 
     attributes {
         DeclarationType type { constructor }
     }
-};
-
-nodeset Vars {
-    nodes = {VarLet, Var},
-
-    attributes {
-        string name,
-        Link decl
-    }
-};
-
-node VarLet {
-    attributes {
-        string name { constructor }  // Repeat from nodeset to add constructor
-    }
-};
+};  
 
 node Var {
     attributes {

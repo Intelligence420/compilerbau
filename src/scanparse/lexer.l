@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <limits.h>
 
 #include "ccngen/ast.h"
 #include "ccngen/enum.h"
@@ -36,12 +37,16 @@ int yycolumn = 1;
 %option nounput
 %option yylineno
 
+%x COMMENT
+
+exponent [eE][+-]?[0-9]+
+
 %%
 
 "("                        { FILTER( BRACKET_L); }
 ")"                        { FILTER( BRACKET_R); }
-"{"                        { FILTER(CURLBRACKET_L);}
-"}"                        { FILTER(CURLBRACKET_R);}
+"{"                        { FILTER( CURLBRACKET_L); }
+"}"                        { FILTER( CURLBRACKET_R); }
 ","                        { FILTER( COMMA); }
 ";"                        { FILTER( SEMICOLON); }
 "["                        { FILTER( SQUAREBRACKET_L); }
@@ -78,8 +83,11 @@ int yycolumn = 1;
 
 "int"                       { FILTER( INTTYPE); }
 "float"                     { FILTER( FLOATTYPE); }
-"bool"                      { FILTER ( BOOLTYPE); }
-"void"                      { FILTER ( VOIDTYPE); }
+"bool"                      { FILTER( BOOLTYPE); }
+"void"                      { FILTER( VOIDTYPE); }
+
+"extern"                    { FILTER( EXTERN); }
+"export"                    { FILTER( EXPORT); }
 
 "return"                    { FILTER( RETURNSTATEMENT);}
 
@@ -89,15 +97,44 @@ int yycolumn = 1;
 
 \/\/.*                     {}
 
-"/*"(.|\n)*"*/"              {}  
+"/*"                       { BEGIN(COMMENT); }
+<COMMENT>([^*]|\*[^/])*    { global.col += yyleng; }
+<COMMENT>\n.*              { yycolumn = 1;
+                             global.line += 1;
+                             global.col = 0;
+                             yyless(1); }
+<COMMENT>"*/"              { global.col += yyleng;
+                             BEGIN(INITIAL); }
+"0x"[0-9a-fA-F]+           |
+[0-9]+                     { errno = 0;
+                             char *end;
+                             long cint = strtol(yytext, &end, 0);
 
-[0-9]+                     { yylval.cint=atoi(yytext);
-                             FILTER( NUM);
-                           }
+                             if (errno == ERANGE) {
+                                 yyerror("integer literal out of range");
+                             } else if (*end != '\0') {
+                                 yyerror("invalid integer literal");
+                             } else if (cint < INT_MIN || cint > INT_MAX) {
+                                 yyerror("integer literal out of range");
+                             }
 
-[0-9]*\.[0-9]*               { yylval.cflt=strtod(yytext, NULL);
-                             FILTER( FLOAT);}
+                             yylval.cint = cint;
+                             FILTER(NUM); }
 
+[0-9]+{exponent}           |
+[0-9]+\.[0-9]*{exponent}?  |
+\.[0-9]+{exponent}?        {
+                             errno = 0;
+                             char *end;
+                             yylval.cflt = strtof(yytext, &end);
+
+                             if (errno == ERANGE) {
+                                 yyerror("float literal out of range");
+                             } else if (*end != '\0') {
+                                 yyerror("invalid float literal");
+                             }
+
+                             FILTER(FLOAT); }
 \n.*                       {
                              yycolumn = 1;
                              global.line += 1;

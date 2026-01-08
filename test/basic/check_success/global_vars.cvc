@@ -1,0 +1,6 @@
+extern int x;
+export int y = 2;
+
+int thing() {
+	return x + y;
+}

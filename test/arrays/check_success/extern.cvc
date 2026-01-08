@@ -1,0 +1,5 @@
+extern int[m] a;
+
+int thing() {
+	return m;
+}

@@ -97,6 +97,62 @@ node_st *PRTfunbody(node_st *node){
   return node;
 }
 
+node_st *PRTfuncallstmt(node_st *node){
+
+  TRAVchildren(node);
+
+  return node;
+}
+
+node_st *PRTids(node_st *node){
+  
+  TRAVchildren(node);
+
+  return node;
+}
+
+node_st *PRTvardef(node_st *node){
+  TRAVchildren(node);
+  return node;
+}
+
+node_st *PRTvardefs(node_st *node){
+  TRAVchildren(node);
+  return node;
+}
+
+node_st *PRTarrexpr(node_st *node){
+  TRAVchildren(node);
+  return node;
+}
+
+node_st *PRTlocalfundef(node_st *node){
+  TRAVchildren(node);
+  return node;
+}
+
+node_st *PRTglobaldef(node_st *node){
+  TRAVchildren(node);
+  return node;
+}
+
+node_st *PRTglobaldec(node_st *node){
+  TRAVchildren(node);
+  return node;
+}
+
+node_st *PRTfundec(node_st *node){
+
+  TRAVchildren(node);
+
+  return node;
+}
+
+node_st *PRTvarref(node_st *node){
+  TRAVchildren(node);
+  return node;
+}
+
 node_st *PRTvardecs(node_st *node){
   TRAVchildren(node);
   return node;
@@ -117,6 +173,7 @@ node_st *PRTparams(node_st *node){
   
 
 node_st *PRTparam(node_st *node){
+  TRAVchildren(node);
   char *param_type = TYstr(PARAM_TYPE(node));
 
   printf("%s %s", param_type, PARAM_NAME(node));
@@ -240,10 +297,10 @@ node_st *PRTtypecast(node_st *node)
 }
 
 node_st *PRTvardec(node_st *node) {
-  char *decltype = TYstr(VARDEC_TYPE(node));
+  char *decltype = TYstr(VARDEF_TYPE(node));
 
-  printf("%s %s", decltype, VARDEC_NAME(node));
-  if (VARDEC_EXPR(node) != NULL){
+  printf("%s %s", decltype, VARDEF_NAME(node));
+  if (VARDEF_EXPR(node) != NULL){
     printf(" = ");
   }
   TRAVchildren(node);
@@ -333,18 +390,9 @@ node_st *PRTblock(node_st *node) {
 /**
  * @fn PRTvarlet
  */
-node_st *PRTvarlet(node_st *node)
-{
-    printf("%s", VARLET_NAME(node));
-    return node;
-}
-
-/**
- * @fn PRTvar
- */
 node_st *PRTvar(node_st *node)
 {
-    printf( "%s", VAR_NAME(node));
+    printf("%s", VAR_NAME(node));
     return node;
 }
 

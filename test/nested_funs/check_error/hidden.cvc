@@ -1,0 +1,10 @@
+void one() {
+    void two() {
+        void three() {}
+    }
+    three();
+}
+
+void foo() {
+    two();
+}

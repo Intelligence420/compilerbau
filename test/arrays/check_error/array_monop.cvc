@@ -1,0 +1,4 @@
+int main() {
+	int[4] a;
+	return -a;
+}
