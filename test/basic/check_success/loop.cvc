@@ -1,0 +1,12 @@
+int main() {
+	int x = 0;
+	for (int i = 0, 10) {
+		x = x + i;
+	}
+
+	for (int i = 0, 5) {
+		x = x + i;
+	}
+
+	return x;
+}

@@ -1,0 +1,13 @@
+void one() {
+    void two() {
+        three();
+    }
+    void three() {
+        four();
+    }
+    two();
+}
+
+void four() {
+    one();
+}

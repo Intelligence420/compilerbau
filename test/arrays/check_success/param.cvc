@@ -1,0 +1,3 @@
+int thing(int[n] a) {
+	return n;
+}

@@ -1,0 +1,9 @@
+void foo() {
+    int x;
+    float y;
+    bool z;
+
+    int[x] a;
+    int[y] b;
+    int[z] c;
+}

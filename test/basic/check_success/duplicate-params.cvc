@@ -1,0 +1,2 @@
+extern int print(int val);
+extern int show(int val);

@@ -1,0 +1,7 @@
+int thing(int[m] a) {
+	return a[0];
+}
+
+int main() {
+	thing(0);
+}

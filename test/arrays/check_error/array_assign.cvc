@@ -1,0 +1,6 @@
+extern int[m] a;
+
+void main() {
+	int[4] b;
+	a = b;
+}

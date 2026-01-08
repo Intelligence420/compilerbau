@@ -1,0 +1,15 @@
+extern void printInt(int x);
+
+int twos = 0;
+
+int two() {
+	twos = twos + 1;
+	return 2;
+}
+
+void foo () {
+	int[2, two()] a = two();
+	int[2] b = a[1, 1];
+	printInt(twos);
+	printInt(a[1, 1]);
+}

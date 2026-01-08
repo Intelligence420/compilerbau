@@ -1,0 +1,2 @@
+extern int[m] a;
+extern int[m] b;
