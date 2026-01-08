@@ -80,6 +80,11 @@ node_st *PRTfundef(node_st *node){
   return node;
 }
 
+node_st *PRTfundefs(node_st *node){
+  TRAVchildren(node);
+  return node;
+}
+
 node_st *PRTfunheader(node_st *node){
   char *decl_type = TYstr(FUNHEADER_TYPE(node));
 

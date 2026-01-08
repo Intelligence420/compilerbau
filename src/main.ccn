@@ -117,6 +117,7 @@ node FunHeader {
 node FunBody {
     children {
         VarDefs decl { constructor },
+        FunDefs funs { constructor },
         Stmts stmts { constructor }
     }
 };
@@ -145,6 +146,13 @@ node VarDefs {
     children {
         VarDef dec { constructor, mandatory },
         VarDefs next { constructor }
+    }
+};
+
+node FunDefs {
+    children {
+        FunDef fun { constructor, mandatory},
+        FunDefs next { constructor }
     }
 };
 

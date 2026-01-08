@@ -48,7 +48,7 @@ check:
 # Subdirectories of "test/" to traverse into during testing. Enable
 # "nested_funs" and "arrays" when you start implementing those extensions.
 # "preprocess" is optional, for those who implemented the C preprocessor.
-TEST_DIRS := basic # nested_funs arrays preprocess
+TEST_DIRS := basic nested_funs # arrays preprocess
 
 # Flags to pass to your compiler when running tests (e.g., a verbosity level).
 TEST_CFLAGS := ""
