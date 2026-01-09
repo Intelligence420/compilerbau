@@ -52,7 +52,7 @@ void AddLocToNode(node_st *node, void *begin_loc, void *end_loc);
 %token <id> ID
 
 %type <node> decls decl fundec fundef globaldec globaldef ids funheader funbody funparamdef
-%type <node> intval floatval boolval constant expr exprs funcall varref localfundef localfundefs
+%type <node> intval floatval boolval constant expr exprs funcall varref localfundef localfundefs arrexpr
 %type <node> stmts stmt vardef assign var program ifstatement block param params
 %type <node> whilestatement dostatement forstatement returnstatement
 %type <ctype> decltype voidtype
@@ -281,7 +281,13 @@ assign: var LET expr SEMICOLON
         }
         ;
 
-var: ID { $$ = ASTvar($1); } ;
+var: ID { 
+          $$ = ASTvar(NULL, $1); 
+        }
+        | ID SQUAREBRACKET_L exprs SQUAREBRACKET_R {
+          $$ = ASTvar($exprs, $1);
+        }  
+        ;
 
 varref: var { $$ = ASTvarref($1); }
 
