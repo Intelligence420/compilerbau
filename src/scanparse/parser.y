@@ -21,12 +21,20 @@ void AddLocToNode(node_st *node, void *begin_loc, void *end_loc);
 
 %}
 
+%code requires {
+  typedef struct {
+    node_st *vars;
+    node_st *funs;
+  } localdefs_st;
+}
+
 %union {
  char               *id;
  int                 cint;
  float               cflt;
  enum DeclarationType ctype;
  node_st             *node;
+ localdefs_st         localdefs;
 }
 
 %locations
@@ -44,10 +52,11 @@ void AddLocToNode(node_st *node, void *begin_loc, void *end_loc);
 %token <id> ID
 
 %type <node> decls decl fundec fundef globaldec globaldef ids funheader funbody funparamdef
-%type <node> intval floatval boolval constant expr exprs funcall varref
-%type <node> stmts stmt vardef vardefs assign var program ifstatement block param params
+%type <node> intval floatval boolval constant expr exprs funcall varref localfundef localfundefs
+%type <node> stmts stmt vardef assign var program ifstatement block param params
 %type <node> whilestatement dostatement forstatement returnstatement
 %type <ctype> decltype voidtype
+%type <localdefs> localdefs
 
 %precedence "then"
 %precedence ELSESTATEMENT
@@ -133,6 +142,30 @@ fundef: funheader[header] CURLBRACKET_L funbody[body] CURLBRACKET_R
 
                   };
 
+localdefs: vardef {
+            $$ = (localdefs_st){.vars = ASTvardefs($1, NULL), .funs = NULL};
+          }
+          | localfundef {
+            $$ = (localdefs_st){.vars = NULL, .funs = ASTfundefs($1, NULL)};
+          }
+          | vardef localdefs {
+            $$ = (localdefs_st){.vars = ASTvardefs($1, $2.vars), .funs = $2.funs };
+          } 
+          | localfundef localfundefs {
+            $$ = (localdefs_st){.vars = NULL, .funs = ASTfundefs($1, $2)};
+          }
+          ;
+
+localfundef: funheader[header] CURLBRACKET_L funbody[body] CURLBRACKET_R
+                 {
+                    $$ = ASTfundef($header, $body, false);
+                  };
+
+localfundefs:
+    localfundef localfundefs { $$ = ASTfundefs($1, $2); }
+  | localfundef         {  $$ = ASTfundefs($1, NULL); }
+  ;
+
 funheader: decltype ID[name] BRACKET_L funparamdef[param] BRACKET_R {
           $$ = ASTfunheader($param, $1, $name);
         }
@@ -171,20 +204,18 @@ param: decltype ID
           $$ = ASTparam($3, $1, $name); 
         };
 
-funbody: vardefs stmts {
-          $$ = ASTfunbody($1, $2);
+funbody: localdefs stmts {
+          $$ = ASTfunbody($1.vars, $1.funs, $2);
         }
-        | vardefs {
-          $$ = ASTfunbody($1, NULL);
+        | localdefs {
+          $$ = ASTfunbody($1.vars, $1.funs, NULL);
         }
         | stmts {
-          $$ = ASTfunbody(NULL, $1);
+          $$ = ASTfunbody(NULL, NULL, $1);
         }
         | %empty { 
-          $$ = ASTfunbody(NULL, NULL); 
+          $$ = ASTfunbody(NULL, NULL, NULL); 
         };
-
-
 
 ifstatement: IFSTATEMENT BRACKET_L expr BRACKET_R block[block1] ELSESTATEMENT block[block2] {
           $$ = ASTifelsestatement($block1, $expr, $block2);
@@ -218,11 +249,6 @@ returnstatement: RETURNSTATEMENT expr SEMICOLON{
     $$ = ASTreturnstatement(NULL);
   }
    ;
-
-vardefs:
-    vardef vardefs { $$ = ASTvardefs($1, $2); }
-  | vardef         {  $$ = ASTvardefs($1, NULL); }
-  ;
 
 vardef: decltype[type] ID[name] LET expr SEMICOLON
        {
