@@ -5,7 +5,7 @@
 
 #define INITIAL_CAPACITY 2
 
-FunctionTable *create_table(FunctionTable *parent) {
+FunctionTable *create_funtable(FunctionTable *parent) {
   FunctionTable *table = MEMmalloc(sizeof(FunctionTable));
   table->functions = MEMmalloc(INITIAL_CAPACITY * sizeof(Function));
   table->size = 0;
@@ -20,7 +20,7 @@ static void grow_table(FunctionTable *table) {
       MEMrealloc(table->functions, table->capacity * sizeof(Function));
 }
 
-void table_insert(FunctionTable *table, Function fun) {
+void funtable_insert(FunctionTable *table, Function fun) {
   if (table->size == table->capacity) {
     grow_table(table);
   }
@@ -29,7 +29,7 @@ void table_insert(FunctionTable *table, Function fun) {
   table->size++;
 }
 
-void table_free(FunctionTable *table) {
+void funtable_free(FunctionTable *table) {
   for (int i = 0; i < table->size; i++) {
     MEMfree(table->functions[i].name);
   }
@@ -38,7 +38,7 @@ void table_free(FunctionTable *table) {
   MEMfree(table);
 }
 
-bool table_contains(FunctionTable *table, char *name) {
+bool funtable_contains(FunctionTable *table, char *name) {
   for (int i = 0; i < table->size; i++) {
     if (STReq(name, table->functions[i].name)) {
       return true;
@@ -48,6 +48,6 @@ bool table_contains(FunctionTable *table, char *name) {
   if (table->parent == NULL) {
     return false;
   } else {
-    return table_contains(table->parent, name);
+    return funtable_contains(table->parent, name);
   }
 }

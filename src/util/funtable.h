@@ -13,7 +13,7 @@ typedef struct FunctionTable {
   struct FunctionTable *parent;
 } FunctionTable;
 
-FunctionTable *create_table(FunctionTable *parent);
-void table_insert(FunctionTable *table, Function fun);
-void table_free(FunctionTable *table);
-bool table_contains(FunctionTable *table, char *name);
+FunctionTable *create_funtable(FunctionTable *parent);
+void funtable_insert(FunctionTable *table, Function fun);
+void funtable_free(FunctionTable *table);
+bool funtable_contains(FunctionTable *table, char *name);

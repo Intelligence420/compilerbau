@@ -20,7 +20,7 @@ void FNSfini(void) {}
 
 node_st *FNSprogram(node_st *node) {
   struct data_fns *data = DATA_FNS_GET();
-  data->functions = create_table(NULL); // globale Ebene
+  data->functions = create_funtable(NULL); // globale Ebene
 
   TRAVchildren(node);
 
@@ -35,9 +35,9 @@ node_st *FNSfundef(node_st *node) {
   struct data_fns *data = DATA_FNS_GET();
 
   Function fun = {.name = STRcpy(func_name)};
-  table_insert(data->functions, fun);
+  funtable_insert(data->functions, fun);
 
-  FunctionTable *functions = create_table(data->functions);
+  FunctionTable *functions = create_funtable(data->functions);
   FunctionTable *saved = data->functions;
   data->functions = functions;
 
@@ -57,7 +57,7 @@ node_st *FNSfundec(node_st *node){
   struct data_fns *data = DATA_FNS_GET();
 
   Function fun = {.name = STRcpy(func_name)};
-  table_insert(data->functions, fun);
+  funtable_insert(data->functions, fun);
 
   return node;
 }
