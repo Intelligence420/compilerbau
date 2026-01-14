@@ -3,13 +3,45 @@ start phase RootPhase {
 
     actions {
         pass SPdoScanParse;
+        Analysis;
         Print;
+        MemFree;
     }
 };
 
 traversal Print {
     uid = PRT
 };
+
+/*** Phases ***/
+
+phase Analysis {
+    info = "Performs context analysis on the AST",
+
+    actions {
+        traversal Functions {
+            uid = FNS,
+            nodes = { Program, FunDef, FunDec },
+            travdata {
+                user FunctionTablePtr functions
+            }
+        };
+
+        traversal Resolve {
+            uid = RSO,
+            nodes = { Program, FunDef, FunCall },
+            travdata {
+                user FunctionTablePtr functions
+            } 
+        };
+    }
+};
+
+traversal MemFree {
+    uid = FREE,
+    nodes = { Program, FunDef }
+};
+
 
 /*** AST ***/
 
@@ -42,6 +74,10 @@ nodeset Expr = {Num, Float, Bool, Binop, Monop, FunCall, VarRef, TypeCast};
 root node Program {
     children {
         Decls decls { constructor, mandatory }
+    },
+
+    attributes {
+        user FunctionTablePtr functions
     }
 };
 
@@ -59,7 +95,8 @@ node FunDef {
     },
 
     attributes {
-        bool export { constructor }
+        bool export { constructor },
+        user FunctionTablePtr functions
     }
 };
 
@@ -285,7 +322,7 @@ node FunCall {
     },
 
     attributes {
-        string name { constructor }
+        string name { constructor, mandatory }
     }
 };
 
