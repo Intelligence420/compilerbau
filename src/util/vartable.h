@@ -1,9 +1,11 @@
 #pragma once
 
+#include "ccngen/enum.h"
 #include <stdbool.h>
 
 typedef struct Variable {
     char *name;
+    enum DeclarationType type;
 } Variable;
 
 typedef struct VariableTable {

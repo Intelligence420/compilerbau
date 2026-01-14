@@ -21,6 +21,24 @@ static void grow_table(VariableTable *table) {
 }
 
 void vartable_insert(VariableTable *table, Variable var) {
+  // TODO: schauen ob es die variable schon gibt
+  // NOTE: aber nur auf diesem level!!!
+  /*
+    int main(){
+      int x = 0;
+      int x = 1;
+      }
+      
+      --> verboten!
+    ------------------------------
+    int x = 0;
+    int main(){
+      int x = 1;
+      }
+      
+      --> Erlaubt!
+  */
+
   if (table->size == table->capacity) {
     grow_table(table);
   }
