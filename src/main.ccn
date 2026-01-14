@@ -31,7 +31,8 @@ phase Analysis {
             uid = RSO,
             nodes = { Program, FunDef, FunCall },
             travdata {
-                user FunctionTablePtr functions
+                user FunctionTablePtr functions,
+                user VariableTablePtr variables
             } 
         };
     }
@@ -77,7 +78,8 @@ root node Program {
     },
 
     attributes {
-        user FunctionTablePtr functions
+        user FunctionTablePtr functions,
+        user VariableTablePtr variables
     }
 };
 
@@ -96,7 +98,8 @@ node FunDef {
 
     attributes {
         bool export { constructor },
-        user FunctionTablePtr functions
+        user FunctionTablePtr functions,
+        user VariableTablePtr variables
     }
 };
 
@@ -125,14 +128,7 @@ node GlobalDef {
     attributes {
         bool export { constructor }
     }
-};
-
-node LocalFundef {
-    children {
-        FunHeader header { constructor, mandatory },
-        FunBody body { constructor, mandatory }
-    }
-};
+}; 
 
 node ArrExpr {
     children {
