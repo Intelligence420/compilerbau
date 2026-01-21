@@ -3,13 +3,54 @@ start phase RootPhase {
 
     actions {
         pass SPdoScanParse;
+        Analysis;
         Print;
+        MemFree;
     }
 };
 
 traversal Print {
     uid = PRT
 };
+
+/*** Phases ***/
+
+phase Analysis {
+    info = "Performs context analysis on the AST",
+
+    actions {
+        traversal Functions {
+            uid = FNS,
+            nodes = { Program, FunDef, FunDec },
+            travdata {
+                user FunctionTablePtr functions
+            }
+        };
+
+        traversal Resolve {
+            uid = RSO,
+            nodes = { Program, FunDef, FunCall, VarDef, GlobalDec, Param, Var },
+            travdata {
+                user FunctionTablePtr functions,
+                user VariableTablePtr variables
+            } 
+        };
+
+        traversal TypeCheck {
+            uid = TYC,
+            nodes = {Assign, VarDef, FunDef} | (Stmt - { FunCallStmt }) | Expr,
+            travdata {
+                DeclarationType return_type
+            }
+        };
+    }
+};
+
+traversal MemFree {
+    uid = FREE,
+    nodes = { Program, FunDef, Var, FunCall }
+};
+
 
 /*** AST ***/
 
@@ -37,11 +78,22 @@ enum DeclarationType {
 
 nodeset Decl = {FunDef, FunDec, GlobalDec, GlobalDef};
 nodeset Stmt = {Assign, FunCallStmt, Ifstatement, Ifelsestatement, Whilestatement, Dostatement, Forstatement, Returnstatement};
-nodeset Expr = {Num, Float, Bool, Binop, Monop, FunCall, VarRef, TypeCast};
+nodeset Expr {
+    nodes = {Num, Float, Bool, Binop, Monop, FunCall, VarRef, TypeCast},
+
+    attributes {
+        DeclarationType type
+    }
+};
 
 root node Program {
     children {
         Decls decls { constructor, mandatory }
+    },
+
+    attributes {
+        user FunctionTablePtr functions,
+        user VariableTablePtr variables
     }
 };
 
@@ -59,7 +111,9 @@ node FunDef {
     },
 
     attributes {
-        bool export { constructor }
+        bool export { constructor },
+        user FunctionTablePtr functions,
+        user VariableTablePtr variables
     }
 };
 
@@ -88,14 +142,7 @@ node GlobalDef {
     attributes {
         bool export { constructor }
     }
-};
-
-node LocalFundef {
-    children {
-        FunHeader header { constructor, mandatory },
-        FunBody body { constructor, mandatory }
-    }
-};
+}; 
 
 node ArrExpr {
     children {
@@ -285,7 +332,8 @@ node FunCall {
     },
 
     attributes {
-        string name { constructor }
+        string name { constructor, mandatory },
+        user FunctionPtr funptr
     }
 };
 
@@ -312,7 +360,8 @@ node Var {
     },
 
     attributes {
-        string name { constructor }
+        string name { constructor },
+        user VariablePtr varptr
     }
 };
 

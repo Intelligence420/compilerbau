@@ -31,6 +31,15 @@ include(./coconut/coconut.cmake)
 add_executable(civicc ${FLEX_CivicLexer_OUTPUTS} ${BISON_CivicParser_OUTPUTS}
     src/main.c src/print/print.c src/scanparse/scanParse.c
     src/global/globals.c src/global/globals.h
+
+    # analysis
+    src/analysis/functions.c
+    src/analysis/resolve.c
+    src/analysis/typecheck.c
+
+    # util
+    src/util/funtable.c src/util/memfree.c
+    src/util/vartable.c 
 )
 
 target_compile_options(civicc PRIVATE
