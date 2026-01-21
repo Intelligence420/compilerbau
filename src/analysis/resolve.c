@@ -42,6 +42,19 @@ node_st *RSOfundef(node_st *node) {
   return node;
 }
 
+node_st *RSOfundec(node_st *node) {
+  struct data_rso *data = DATA_RSO_GET();
+  VariableTable *variables_safe = data->variables;
+  data->variables = create_vartable(variables_safe);
+
+  TRAVchildren(node);
+
+  vartable_free(data->variables);
+  data->variables = variables_safe;
+
+  return node;
+}
+
 node_st *RSOfuncall(node_st *node) {
   TRAVchildren(node);
 

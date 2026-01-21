@@ -29,7 +29,7 @@ phase Analysis {
 
         traversal Resolve {
             uid = RSO,
-            nodes = { Program, FunDef, FunCall, VarDef, GlobalDec, Param, Var },
+            nodes = { Program, FunDef, FunCall, FunDec, VarDef, GlobalDec, Param, Var },
             travdata {
                 user FunctionTablePtr functions,
                 user VariableTablePtr variables
