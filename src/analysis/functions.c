@@ -31,10 +31,11 @@ node_st *FNSprogram(node_st *node) {
 node_st *FNSfundef(node_st *node) {
   node_st *header = FUNDEF_HEADER(node);
   const char *func_name = FUNHEADER_NAME(header);
+  enum DeclarationType type = FUNHEADER_TYPE(header);
 
   struct data_fns *data = DATA_FNS_GET();
 
-  Function fun = {.name = STRcpy(func_name)};
+  Function fun = {.name = STRcpy(func_name), .return_type = type};
   funtable_insert(data->functions, fun);
 
   FunctionTable *functions = create_funtable(data->functions);
@@ -54,9 +55,10 @@ node_st *FNSfundec(node_st *node){
 
   node_st *header = FUNDEC_HEADER(node);
   const char *func_name = FUNHEADER_NAME(header);
+  enum DeclarationType type = FUNHEADER_TYPE(header);
   struct data_fns *data = DATA_FNS_GET();
 
-  Function fun = {.name = STRcpy(func_name)};
+  Function fun = {.name = STRcpy(func_name), .return_type = type};
   funtable_insert(data->functions, fun);
 
   return node;

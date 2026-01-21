@@ -51,3 +51,27 @@ bool funtable_contains(FunctionTable *table, char *name) {
     return funtable_contains(table->parent, name);
   }
 }
+
+static Function *funtable_local_get_function(FunctionTable *table, char *name) {
+  for (int i = 0; i < table->size; i++) {
+    if (STReq(name, table->functions[i].name)) {
+      return &table->functions[i];
+    }
+  }
+  return NULL;
+}
+
+Function *funtable_get_function(FunctionTable *table, char *name) {
+  Function *fun = funtable_local_get_function(table, name);
+  if (fun != NULL) {
+    Function *new = MEMmalloc(sizeof(Function));
+    *new = *fun;
+    return new;
+  }
+
+  if (table->parent == NULL) {
+    return NULL;
+  } else {
+    return funtable_get_function(table->parent, name);
+  }
+}

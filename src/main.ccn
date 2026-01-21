@@ -35,12 +35,20 @@ phase Analysis {
                 user VariableTablePtr variables
             } 
         };
+
+        traversal TypeCheck {
+            uid = TYC,
+            nodes = {Assign, VarDef, FunDef} | (Stmt - { FunCallStmt }) | Expr,
+            travdata {
+                DeclarationType return_type
+            }
+        };
     }
 };
 
 traversal MemFree {
     uid = FREE,
-    nodes = { Program, FunDef }
+    nodes = { Program, FunDef, Var, FunCall }
 };
 
 
@@ -70,7 +78,13 @@ enum DeclarationType {
 
 nodeset Decl = {FunDef, FunDec, GlobalDec, GlobalDef};
 nodeset Stmt = {Assign, FunCallStmt, Ifstatement, Ifelsestatement, Whilestatement, Dostatement, Forstatement, Returnstatement};
-nodeset Expr = {Num, Float, Bool, Binop, Monop, FunCall, VarRef, TypeCast};
+nodeset Expr {
+    nodes = {Num, Float, Bool, Binop, Monop, FunCall, VarRef, TypeCast},
+
+    attributes {
+        DeclarationType type
+    }
+};
 
 root node Program {
     children {
@@ -318,7 +332,8 @@ node FunCall {
     },
 
     attributes {
-        string name { constructor, mandatory }
+        string name { constructor, mandatory },
+        user FunctionPtr funptr
     }
 };
 
@@ -345,7 +360,8 @@ node Var {
     },
 
     attributes {
-        string name { constructor }
+        string name { constructor },
+        user VariablePtr varptr
     }
 };
 

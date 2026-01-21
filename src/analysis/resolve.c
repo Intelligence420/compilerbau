@@ -8,7 +8,6 @@
 #include "util/funtable.h"
 #include "util/vartable.h"
 #include <stdbool.h>
-#include <stdlib.h>
 
 void RSOinit(void) {}
 void RSOfini(void) {}
@@ -49,9 +48,11 @@ node_st *RSOfuncall(node_st *node) {
   char *name = FUNCALL_NAME(node);
 
   struct data_rso *data = DATA_RSO_GET();
-  bool contains = funtable_contains(data->functions, name);
-  if (!contains) {
+  Function *fun = funtable_get_function(data->functions, name);
+  if (fun == NULL) {
     CTI(CTI_ERROR, true, "cannot find function with name %s", name);
+  } else {
+    FUNCALL_FUNPTR(node) = fun;
   }
 
   return node;
@@ -71,17 +72,22 @@ node_st *RSOvardef(node_st *node) {
 }
 
 node_st *RSOglobaldec(node_st *node) {
-  //TODO: 
-  /*
-    extern int x[m, ...];
-                 ^ jedes m soll vom type int sein
-  */
   TRAVchildren(node);
 
   char *name = GLOBALDEC_NAME(node);
   enum DeclarationType type = GLOBALDEC_TYPE(node);
 
   struct data_rso *data = DATA_RSO_GET();
+
+  // allen IDs in Liste einfügen und den Parameter-Typ vom äußeren Typ ableiten
+  node_st *ids = GLOBALDEC_IDS(node);
+  while (ids != NULL) {
+    char *id_name = IDS_ID(ids);
+    Variable var = {.name = STRcpy(id_name), .type = type};
+    vartable_insert(data->variables, var);
+    ids = IDS_NEXT(ids);
+  }
+
   Variable var = {.name = STRcpy(name), .type = type};
   vartable_insert(data->variables, var);
 
@@ -94,27 +100,33 @@ node_st *RSOvar(node_st *node) {
   char *name = VAR_NAME(node);
   struct data_rso *data = DATA_RSO_GET();
 
-  bool contains = vartable_contains(data->variables, name);
-  if (!contains) {
+  Variable *var = vartable_get_variable(data->variables, name);
+  if (var == NULL) {
     CTI(CTI_ERROR, true, "cannot find variable with name %s", name);
+  } else {
+    VAR_VARPTR(node) = var;
   }
 
   return node;
 }
 
-node_st *RSOparam(node_st *node){
-  //TODO: 
-  /*
-    int x[m, ...];
-          ^ jedes m soll vom type int sein
-  */
-
+node_st *RSOparam(node_st *node) {
   TRAVchildren(node);
 
   char *name = PARAM_NAME(node);
   enum DeclarationType type = PARAM_TYPE(node);
 
   struct data_rso *data = DATA_RSO_GET();
+
+  // allen IDs in Liste einfügen und den Parameter-Typ vom äußeren Typ ableiten
+  node_st *ids = PARAM_IDS(node);
+  while (ids != NULL) {
+    char *id_name = IDS_ID(ids);
+    Variable var = {.name = STRcpy(id_name), .type = type};
+    vartable_insert(data->variables, var);
+    ids = IDS_NEXT(ids);
+  }
+
   Variable var = {.name = STRcpy(name), .type = type};
   vartable_insert(data->variables, var);
 

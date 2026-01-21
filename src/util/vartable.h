@@ -19,3 +19,4 @@ VariableTable *create_vartable(VariableTable *parent);
 void vartable_insert(VariableTable *table, Variable var);
 void vartable_free(VariableTable *table);
 bool vartable_contains(VariableTable *table, char *name);
+Variable *vartable_get_variable(VariableTable *table, char *name);
