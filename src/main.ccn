@@ -38,7 +38,7 @@ phase Analysis {
 
         traversal TypeCheck {
             uid = TYC,
-            nodes = {Assign, VarDef, FunDef} | (Stmt - { FunCallStmt }) | Expr,
+            nodes = { Program, Assign, VarDef, FunDef } | (Stmt - { FunCallStmt }) | Expr,
             travdata {
                 DeclarationType return_type
             }

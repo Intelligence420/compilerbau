@@ -12,6 +12,12 @@
 void TYCinit(void) {}
 void TYCfini(void) {}
 
+node_st *TYCprogram(node_st *node) {
+  TRAVchildren(node);
+  CTIabortOnError();
+  return node;
+}
+
 // Nodeset Expr
 node_st *TYCnum(node_st *node) {
   TRAVchildren(node);
