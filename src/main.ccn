@@ -77,7 +77,7 @@ enum DeclarationType {
 };
 
 nodeset Decl = {FunDef, FunDec, GlobalDec, GlobalDef};
-nodeset Stmt = {Assign, FunCallStmt, Ifstatement, Ifelsestatement, Whilestatement, Dostatement, Forstatement, Returnstatement};
+nodeset Stmt = {Assign, FunCallStmt, Ifstatement, Whilestatement, Dostatement, Forstatement, Returnstatement};
 nodeset Expr {
     nodes = {Num, Float, Bool, Binop, Monop, FunCall, VarRef, TypeCast},
 
@@ -245,15 +245,8 @@ node Param {
 
 node Ifstatement {
     children {
-        Block block {constructor},
-        Expr expr { constructor, mandatory}
-    }
-};
-
-node Ifelsestatement {
-    children {
-        Block ifblock {constructor},
-        Expr expr { constructor, mandatory},
+        Expr expr { constructor, mandatory },
+        Block block { constructor, mandatory },
         Block elseblock { constructor }
     }
 };

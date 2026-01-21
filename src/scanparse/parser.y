@@ -218,10 +218,10 @@ funbody: localdefs stmts {
         };
 
 ifstatement: IFSTATEMENT BRACKET_L expr BRACKET_R block[block1] ELSESTATEMENT block[block2] {
-          $$ = ASTifelsestatement($block1, $expr, $block2);
+          $$ = ASTifstatement($expr, $block1, $block2);
         }
         | IFSTATEMENT BRACKET_L expr BRACKET_R block %prec "then" {
-          $$ = ASTifstatement($block, $expr);
+          $$ = ASTifstatement($expr, $block, NULL);
         }
         ;
 

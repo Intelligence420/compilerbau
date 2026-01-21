@@ -323,21 +323,6 @@ node_st *PRTifstatement(node_st *node){
   return node;
 }
 
-node_st *PRTifelsestatement(node_st *node){
-  printf("if (");
-  TRAVexpr(node);
-  printf(")\n");
-
-  TRAVifblock(node);
-
-  printf("else");
-  printf("\n");
-
-  TRAVelseblock(node);
-
-  return node;
-}
-
 node_st *PRTwhilestatement(node_st *node){
   printf("while (");
   TRAVexpr(node);

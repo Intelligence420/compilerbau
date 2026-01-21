@@ -184,21 +184,10 @@ node_st *TYCassign(node_st *node) {
 
 node_st *TYCifstatement(node_st *node) {
   TRAVchildren(node);
-  node_st *expr = IFELSESTATEMENT_EXPR(node);
+  node_st *expr = IFSTATEMENT_EXPR(node);
 
   if (EXPR_TYPE(expr) != TY_bool) {
     CTI(CTI_ERROR, true, "If condition must be boolean");
-  }
-
-  return node;
-}
-
-node_st *TYCifelsestatement(node_st *node) {
-  TRAVchildren(node);
-  node_st *expr = IFELSESTATEMENT_EXPR(node);
-
-  if (EXPR_TYPE(expr) != TY_bool) {
-    CTI(CTI_ERROR, true, "If-else condition must be boolean");
   }
 
   return node;
