@@ -38,7 +38,7 @@ phase Analysis {
 
         traversal TypeCheck {
             uid = TYC,
-            nodes = { Program, Assign, VarDef, FunDef } | (Stmt - { FunCallStmt }) | Expr,
+            nodes = { Program, Assign, VarDef, FunDef, Var } | (Stmt - { FunCallStmt }) | Expr,
             travdata {
                 DeclarationType return_type
             }
@@ -82,7 +82,8 @@ nodeset Expr {
     nodes = {Num, Float, Bool, Binop, Monop, FunCall, VarRef, TypeCast},
 
     attributes {
-        DeclarationType type
+        DeclarationType type,
+        int dimensionen
     }
 };
 
@@ -354,7 +355,8 @@ node Var {
 
     attributes {
         string name { constructor },
-        user VariablePtr varptr
+        user VariablePtr varptr,
+        int dimensionen
     }
 };
 

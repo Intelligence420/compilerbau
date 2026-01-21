@@ -31,23 +31,6 @@ static void grow_table(VariableTable *table) {
 }
 
 void vartable_insert(VariableTable *table, Variable var) {
-  // TODO: schauen ob es die variable schon gibt
-  // NOTE: aber nur auf diesem level!!!
-  /*
-    int main(){
-      int x = 0;
-      int x = 1;
-      }
-
-      --> verboten!
-    ------------------------------
-    int x = 0;
-    int main(){
-      int x = 1;
-      }
-
-      --> Erlaubt!
-  */
   Variable *existing_var = vartable_local_get_variable(table, var.name);
   if (existing_var != NULL) {
     CTI(CTI_ERROR, true, "variable with name %s already declared", var.name);

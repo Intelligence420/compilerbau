@@ -128,11 +128,36 @@ node_st *TYCfuncall(node_st *node) {
   return node;
 }
 
+node_st *TYCvar(node_st *node) {
+  TRAVchildren(node);
+
+  int dim = 0;
+  node_st *exprs = VAR_EXPRS(node);
+  while (exprs != NULL) {
+    dim++;
+    exprs = EXPRS_NEXT(exprs);
+    // TODO: check if expr is int
+  }
+
+  VAR_DIMENSIONEN(node) = dim;
+
+  return node;
+}
+
 node_st *TYCvarref(node_st *node) {
   TRAVchildren(node);
   node_st *var = VARREF_VAR(node);
   VariablePtr var_ptr = VAR_VARPTR(var);
   EXPR_TYPE(node) = var_ptr->type;
+
+  int dim = VAR_DIMENSIONEN(var);
+  if (dim == 0) {
+    EXPR_DIMENSIONEN(node) = var_ptr->dim;
+  } else if (dim != var_ptr->dim) {
+    CTI(CTI_ERROR, true, "dimensional error. expected %d, but got %d",
+        var_ptr->dim, dim);
+  }
+
   return node;
 }
 
@@ -183,6 +208,12 @@ node_st *TYCassign(node_st *node) {
           "Type error in assignment: mismatch between variable and expression "
           "types.");
     }
+  }
+
+  int dim = VAR_DIMENSIONEN(var);
+  if (dim != var_ptr->dim) {
+    CTI(CTI_ERROR, true, "dimensional error. expected %d, but got %d",
+        var_ptr->dim, dim);
   }
 
   return node;

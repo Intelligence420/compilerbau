@@ -6,6 +6,7 @@
 typedef struct Variable {
     char *name;
     enum DeclarationType type;
+    int dim;
 } Variable;
 
 typedef struct VariableTable {

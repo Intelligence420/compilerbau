@@ -77,8 +77,15 @@ node_st *RSOvardef(node_st *node) {
   char *name = VARDEF_NAME(node);
   enum DeclarationType type = VARDEF_TYPE(node);
 
+  int dim = 0;
+  node_st *exprs = VARDEF_EXPRS(node);
+  while (exprs != NULL) {
+    dim++;
+    exprs = EXPRS_NEXT(exprs);
+  }
+
   struct data_rso *data = DATA_RSO_GET();
-  Variable var = {.name = STRcpy(name), .type = type};
+  Variable var = {.name = STRcpy(name), .type = type, .dim = dim};
   vartable_insert(data->variables, var);
 
   return node;
@@ -92,6 +99,7 @@ node_st *RSOglobaldec(node_st *node) {
 
   struct data_rso *data = DATA_RSO_GET();
 
+  int dim = 0;
   // allen IDs in Liste einfügen und den Parameter-Typ vom äußeren Typ ableiten
   node_st *ids = GLOBALDEC_IDS(node);
   while (ids != NULL) {
@@ -99,9 +107,10 @@ node_st *RSOglobaldec(node_st *node) {
     Variable var = {.name = STRcpy(id_name), .type = type};
     vartable_insert(data->variables, var);
     ids = IDS_NEXT(ids);
+    dim++;
   }
 
-  Variable var = {.name = STRcpy(name), .type = type};
+  Variable var = {.name = STRcpy(name), .type = type, .dim = dim};
   vartable_insert(data->variables, var);
 
   return node;
@@ -114,6 +123,7 @@ node_st *RSOvar(node_st *node) {
   struct data_rso *data = DATA_RSO_GET();
 
   Variable *var = vartable_get_variable(data->variables, name);
+
   if (var == NULL) {
     CTI(CTI_ERROR, true, "cannot find variable with name %s", name);
   } else {
@@ -132,15 +142,17 @@ node_st *RSOparam(node_st *node) {
   struct data_rso *data = DATA_RSO_GET();
 
   // allen IDs in Liste einfügen und den Parameter-Typ vom äußeren Typ ableiten
+  int dim = 0;
   node_st *ids = PARAM_IDS(node);
   while (ids != NULL) {
     char *id_name = IDS_ID(ids);
     Variable var = {.name = STRcpy(id_name), .type = type};
     vartable_insert(data->variables, var);
     ids = IDS_NEXT(ids);
+    dim++;
   }
 
-  Variable var = {.name = STRcpy(name), .type = type};
+  Variable var = {.name = STRcpy(name), .type = type, .dim = dim};
   vartable_insert(data->variables, var);
 
   return node;
