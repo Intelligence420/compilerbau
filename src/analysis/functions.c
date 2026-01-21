@@ -14,6 +14,7 @@
 #include <string.h>
 
 #include "ccngen/trav_data.h"
+#include "palm/memory.h"
 #include "palm/str.h"
 #include "util/funtable.h"
 
@@ -31,7 +32,26 @@ static Function from_header(node_st *node, bool isextern) {
     param = PARAMS_PARAMS(param);
   }
 
-  Parameters params = {.arity = arity};
+  Parameter *list = MEMmalloc(arity * sizeof(Parameter));
+  param = FUNHEADER_PARAMS(node);
+  int i = 0;
+  while (param != NULL) {
+    node_st *ids = PARAM_IDS(PARAMS_PARAM(param));
+
+    int dim = 0;
+    while (ids != NULL) {
+      dim++;
+      ids = IDS_NEXT(ids);
+    }
+
+    Parameter p = {.type = PARAM_TYPE(PARAMS_PARAM(param)), .dim = dim};
+    list[i] = p;
+
+    i++;
+    param = PARAMS_PARAMS(param);
+  }
+
+  Parameters params = {.arity = arity, .list = list};
 
   Function fun = {
       .name = STRcpy(func_name), .return_type = type, .params = params};

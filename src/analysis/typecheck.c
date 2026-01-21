@@ -6,6 +6,7 @@
 #include "palm/ctinfo.h"
 #include "palm/dbug.h"
 #include "user_types.h"
+#include "util/print.h"
 #include "util/vartable.h"
 #include <stdbool.h>
 #include <string.h>
@@ -134,7 +135,43 @@ node_st *TYCfuncall(node_st *node) {
   }
 
   if (arity != func->params.arity) {
-    CTI(CTI_ERROR, true, "Function call arity missmatch. expected: %d but got %d", func->params.arity, arity);
+    CTI(CTI_ERROR, true,
+        "Function call arity missmatch. expected: %d but got %d",
+        func->params.arity, arity);
+  } else {
+    int i = 0;
+    node_st *exprs = FUNCALL_EXPRS(node);
+    while (exprs != NULL) {
+      node_st *expr = EXPRS_EXPR(exprs);
+      Parameter p = func->params.list[i];
+
+      if (p.type != EXPR_TYPE(expr) || p.dim != EXPR_DIMENSIONEN(expr)) {
+        if (p.type != EXPR_TYPE(expr) && p.dim != EXPR_DIMENSIONEN(expr)) {
+          CTI(CTI_ERROR, true,
+              "type mismatch: function expected %d-dimensional array of %s, "
+              "but got %d-dimensional array of %s",
+              p.dim, TYstr(p.type), EXPR_DIMENSIONEN(expr)),
+              TYstr(EXPR_TYPE(expr));
+        } else if (p.dim != 0) {
+          CTI(CTI_ERROR, true,
+              "type mismatch: function expected %d-dimensional array of %s, "
+              "but got %s",
+              p.dim, TYstr(p.type), TYstr(EXPR_TYPE(expr)));
+        } else if (EXPR_DIMENSIONEN(expr) != 0) {
+          CTI(CTI_ERROR, true,
+              "type mismatch: function expected %s, but got %d-dimensional "
+              "array of %s",
+              TYstr(p.type), EXPR_DIMENSIONEN(expr), TYstr(EXPR_TYPE(expr)));
+        } else {
+          CTI(CTI_ERROR, true,
+              "type mismatch: function expected %s, but got %s",
+              TYstr(p.type), TYstr(EXPR_TYPE(expr)));
+        }
+      }
+
+      i++;
+      exprs = EXPRS_NEXT(exprs);
+    }
   }
 
   EXPR_TYPE(node) = func->return_type;
