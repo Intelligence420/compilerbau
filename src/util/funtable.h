@@ -3,9 +3,14 @@
 #include "ccngen/enum.h"
 #include <stdbool.h>
 
+typedef struct Parameters {
+  int arity;
+} Parameters;
+
 typedef struct Function {
   char *name;
   enum DeclarationType return_type;
+  Parameters params;
 } Function;
 
 typedef struct FunctionTable {

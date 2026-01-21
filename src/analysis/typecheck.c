@@ -8,6 +8,7 @@
 #include "user_types.h"
 #include "util/vartable.h"
 #include <stdbool.h>
+#include <string.h>
 
 void TYCinit(void) {}
 void TYCfini(void) {}
@@ -124,6 +125,18 @@ node_st *TYCmonop(node_st *node) {
 node_st *TYCfuncall(node_st *node) {
   TRAVchildren(node);
   FunctionPtr func = FUNCALL_FUNPTR(node);
+
+  int arity = 0;
+  node_st *exprs = FUNCALL_EXPRS(node);
+  while (exprs != NULL) {
+    arity++;
+    exprs = EXPRS_NEXT(exprs);
+  }
+
+  if (arity != func->params.arity) {
+    CTI(CTI_ERROR, true, "Function call arity missmatch. expected: %d but got %d", func->params.arity, arity);
+  }
+
   EXPR_TYPE(node) = func->return_type;
   return node;
 }
