@@ -134,22 +134,17 @@ node_st *RSOvar(node_st *node) {
 }
 
 node_st *RSOforstatement(node_st *node) {
-  // TODO: speicher in gleicher tabelle nicht in neuer. var braucht valid
-  // setzt valid auf true und dannach wieder auf false.
-  // beim pushen ist alles valid
   struct data_rso *data = DATA_RSO_GET();
-  VariableTable *variables_safe = data->variables;
-
-  data->variables = create_vartable(data->variables);
 
   char *var_name = FORSTATEMENT_VARIABLE(node);
+
   Variable var = {.name = STRcpy(var_name), .type = TY_int, .dim = 0};
-  vartable_insert(data->variables, var);
+  int idx = vartable_insert_nocheck(data->variables, var);
+  data->variables->variables[idx].readonly = true;
 
   TRAVchildren(node);
 
-  vartable_free(data->variables);
-  data->variables = variables_safe;
+  data->variables->variables[idx].valid = false;
 
   return node;
 }
@@ -167,7 +162,7 @@ node_st *RSOparam(node_st *node) {
   node_st *ids = PARAM_IDS(node);
   while (ids != NULL) {
     char *id_name = IDS_ID(ids);
-    Variable var = {.name = STRcpy(id_name), .type = type};
+    Variable var = {.name = STRcpy(id_name), .type = TY_int, .dim = 0};
     vartable_insert(data->variables, var);
     ids = IDS_NEXT(ids);
     dim++;

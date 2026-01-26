@@ -53,10 +53,9 @@ node_st *TYCbinop(node_st *node) {
     // irgendwie CTI types einsetzten
   }
 
-
-   if (EXPR_DIMENSIONEN(left) != 0 || EXPR_DIMENSIONEN(right) != 0) {
+  if (EXPR_DIMENSIONEN(left) != 0 || EXPR_DIMENSIONEN(right) != 0) {
     CTI(CTI_ERROR, true, "cannot use array in binary operation");
-   }
+  }
 
   switch (binop_type) {
   case BO_add:
@@ -112,9 +111,9 @@ node_st *TYCmonop(node_st *node) {
   enum MonOpType mo_op_type = MONOP_OP(node);
   enum DeclarationType type = EXPR_TYPE(expr);
 
-   if (EXPR_DIMENSIONEN(expr) != 0) {
+  if (EXPR_DIMENSIONEN(expr) != 0) {
     CTI(CTI_ERROR, true, "cannot use array in unary operation");
-   }
+  }
 
   if (mo_op_type == MO_not) {
     if (type != TY_bool) {
@@ -280,12 +279,14 @@ node_st *TYCassign(node_st *node) {
   node_st *var = ASSIGN_LET(node);
   VariablePtr var_ptr = VAR_VARPTR(var);
 
-  if (var_ptr != NULL) {
-    if (var_ptr->type != EXPR_TYPE(expr)) {
-      CTI(CTI_ERROR, true,
-          "Type error in assignment: mismatch between variable and expression "
-          "types.");
-    }
+  if (var_ptr->readonly) {
+    CTI(CTI_ERROR, true, "cannot write to read-only variable");
+  }
+
+  if (var_ptr->type != EXPR_TYPE(expr)) {
+    CTI(CTI_ERROR, true,
+        "Type error in assignment: mismatch between variable and expression "
+        "types.");
   }
 
   int dim = VAR_DIMENSIONEN(var);
@@ -354,7 +355,8 @@ node_st *TYCforstatement(node_st *node) {
 
 node_st *TYCfundef(node_st *node) {
   enum DeclarationType prev = DATA_TYC_GET()->return_type;
-  enum DeclarationType current_return_type = FUNHEADER_TYPE(FUNDEF_HEADER(node));
+  enum DeclarationType current_return_type =
+      FUNHEADER_TYPE(FUNDEF_HEADER(node));
   DATA_TYC_GET()->return_type = current_return_type;
 
   TRAVchildren(node);
@@ -372,7 +374,8 @@ node_st *TYCfundef(node_st *node) {
     }
 
     if (last_stmt == NULL || NODE_TYPE(last_stmt) != NT_RETURNSTATEMENT) {
-      CTI(CTI_ERROR, true, "non-void function does not return a value on all paths");
+      CTI(CTI_ERROR, true,
+          "non-void function does not return a value on all paths");
     }
   }
 

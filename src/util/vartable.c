@@ -6,7 +6,7 @@
 
 static Variable *vartable_local_get_variable(VariableTable *table, char *name) {
   for (int i = 0; i < table->size; i++) {
-    if (STReq(name, table->variables[i].name)) {
+    if (table->variables[i].valid && STReq(name, table->variables[i].name)) {
       return &table->variables[i];
     }
   }
@@ -30,18 +30,27 @@ static void grow_table(VariableTable *table) {
       MEMrealloc(table->variables, table->capacity * sizeof(Variable));
 }
 
-void vartable_insert(VariableTable *table, Variable var) {
+int vartable_insert_nocheck(VariableTable *table, Variable var) {
+  if (table->size == table->capacity) {
+    grow_table(table);
+  }
+
+  var.valid = true;
+  var.readonly = false;
+
+  int idx = table->size;
+  table->variables[idx] = var;
+  table->size++;
+  return idx;
+}
+
+int vartable_insert(VariableTable *table, Variable var) {
   Variable *existing_var = vartable_local_get_variable(table, var.name);
   if (existing_var != NULL) {
     CTI(CTI_ERROR, true, "variable with name %s already declared", var.name);
   }
 
-  if (table->size == table->capacity) {
-    grow_table(table);
-  }
-
-  table->variables[table->size] = var;
-  table->size++;
+  return vartable_insert_nocheck(table, var);
 }
 
 void vartable_free(VariableTable *table) {
