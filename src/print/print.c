@@ -117,7 +117,13 @@ node_st *PRTids(node_st *node){
 }
 
 node_st *PRTvardef(node_st *node){
-  TRAVchildren(node);
+  char *decltype = TYstr(VARDEF_TYPE(node));
+  printf("%s %s", decltype, VARDEF_NAME(node));
+  if (VARDEF_EXPR(node) != NULL){
+    printf(" = ");
+    TRAVexpr(node);
+  }
+  printf(";\n");
   return node;
 }
 
@@ -127,12 +133,15 @@ node_st *PRTvardefs(node_st *node){
 }
 
 node_st *PRTarrexpr(node_st *node){
+  printf("[");
   TRAVchildren(node);
+  printf("]");
   return node;
 }
 
 node_st *PRTlocalfundef(node_st *node){
-  TRAVchildren(node);
+  TRAVheader(node);
+  TRAVbody(node);
   return node;
 }
 
