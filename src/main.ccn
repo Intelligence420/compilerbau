@@ -29,7 +29,7 @@ phase Analysis {
 
         traversal Resolve {
             uid = RSO,
-            nodes = { Program, FunDef, FunCall, FunDec, VarDef, GlobalDec, Param, Var },
+            nodes = { Program, FunDef, FunCall, FunDec, VarDef, GlobalDec, Param, Var, Forstatement },
             travdata {
                 user FunctionTablePtr functions,
                 user VariableTablePtr variables
@@ -41,6 +41,14 @@ phase Analysis {
             nodes = { Program, Assign, VarDef, FunDef, Var } | (Stmt - { FunCallStmt }) | Expr,
             travdata {
                 DeclarationType return_type
+            }
+        };
+
+        traversal Constants {
+            uid = CST,
+            nodes = { Program, Num, Float },
+            travdata {
+                user ConstantTablePtr constants
             }
         };
     }
@@ -94,7 +102,8 @@ root node Program {
 
     attributes {
         user FunctionTablePtr functions,
-        user VariableTablePtr variables
+        user VariableTablePtr variables,
+        user ConstantTablePtr constants
     }
 };
 
@@ -362,13 +371,15 @@ node Var {
 
 node Num {
     attributes {
-        int val { constructor }
+        int val { constructor },
+        int g
     }
 };
 
 node Float {
     attributes {
-        float val { constructor }
+        float val { constructor },
+        int g
     }
 };
 

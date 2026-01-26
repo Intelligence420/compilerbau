@@ -36,10 +36,12 @@ add_executable(civicc ${FLEX_CivicLexer_OUTPUTS} ${BISON_CivicParser_OUTPUTS}
     src/analysis/functions.c
     src/analysis/resolve.c
     src/analysis/typecheck.c
+    src/analysis/constants.c
 
     # util
     src/util/funtable.c src/util/memfree.c
     src/util/vartable.c 
+    src/util/consttable.c
 )
 
 target_compile_options(civicc PRIVATE

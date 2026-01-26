@@ -53,6 +53,11 @@ node_st *TYCbinop(node_st *node) {
     // irgendwie CTI types einsetzten
   }
 
+
+   if (EXPR_DIMENSIONEN(left) != 0 || EXPR_DIMENSIONEN(right) != 0) {
+    CTI(CTI_ERROR, true, "cannot use array in binary operation");
+   }
+
   switch (binop_type) {
   case BO_add:
   case BO_mul:
@@ -107,12 +112,17 @@ node_st *TYCmonop(node_st *node) {
   enum MonOpType mo_op_type = MONOP_OP(node);
   enum DeclarationType type = EXPR_TYPE(expr);
 
+   if (EXPR_DIMENSIONEN(expr) != 0) {
+    CTI(CTI_ERROR, true, "cannot use array in unary operation");
+   }
+
   if (mo_op_type == MO_not) {
     if (type != TY_bool) {
       CTI(CTI_ERROR, true,
           "Type error in unary operation: expected boolean type for logical "
           "negation.");
     }
+    EXPR_TYPE(node) = TY_bool;
   } else if (mo_op_type == MO_neg) {
     if (type != TY_int && type != TY_float) {
       CTI(CTI_ERROR, true,
@@ -164,8 +174,8 @@ node_st *TYCfuncall(node_st *node) {
               TYstr(p.type), EXPR_DIMENSIONEN(expr), TYstr(EXPR_TYPE(expr)));
         } else {
           CTI(CTI_ERROR, true,
-              "type mismatch: function expected %s, but got %s",
-              TYstr(p.type), TYstr(EXPR_TYPE(expr)));
+              "type mismatch: function expected %s, but got %s", TYstr(p.type),
+              TYstr(EXPR_TYPE(expr)));
         }
       }
 
@@ -184,9 +194,14 @@ node_st *TYCvar(node_st *node) {
   int dim = 0;
   node_st *exprs = VAR_EXPRS(node);
   while (exprs != NULL) {
+    node_st *expr = EXPRS_EXPR(exprs);
+    if (EXPR_TYPE(expr) != TY_int) {
+      CTI(CTI_ERROR, true,
+          "Array expression index must be integer. expected int, but got %s",
+          TYstr(EXPR_TYPE(expr)));
+    }
     dim++;
     exprs = EXPRS_NEXT(exprs);
-    // TODO: check if expr is int
   }
 
   VAR_DIMENSIONEN(node) = dim;
@@ -231,7 +246,17 @@ node_st *TYCtypecast(node_st *node) {
 node_st *TYCvardef(node_st *node) {
   TRAVchildren(node);
 
-  // TOOD: check array index expressions
+  node_st *exprs = VARDEF_EXPRS(node);
+  while (exprs != NULL) {
+    node_st *expr = EXPRS_EXPR(exprs);
+    if (EXPR_TYPE(expr) != TY_int) {
+      CTI(CTI_ERROR, true,
+          "Array expression index must be integer. expected int, but got %s",
+          TYstr(EXPR_TYPE(expr)));
+    }
+    exprs = EXPRS_NEXT(exprs);
+  }
+
   node_st *expr = VARDEF_EXPR(node);
   enum DeclarationType type = VARDEF_TYPE(node);
 
@@ -239,6 +264,9 @@ node_st *TYCvardef(node_st *node) {
     if (EXPR_TYPE(expr) != type) {
       CTI(CTI_ERROR, true,
           "Type error in variable definition: initialization type mismatch.");
+    }
+    if (VARDEF_EXPRS(node) != NULL && EXPR_DIMENSIONEN(expr) != 0) {
+      CTI(CTI_ERROR, true, "cannot initialize array with array expression");
     }
   }
 
@@ -326,11 +354,27 @@ node_st *TYCforstatement(node_st *node) {
 
 node_st *TYCfundef(node_st *node) {
   enum DeclarationType prev = DATA_TYC_GET()->return_type;
-  DATA_TYC_GET()->return_type = FUNHEADER_TYPE(FUNDEF_HEADER(node));
+  enum DeclarationType current_return_type = FUNHEADER_TYPE(FUNDEF_HEADER(node));
+  DATA_TYC_GET()->return_type = current_return_type;
 
   TRAVchildren(node);
 
   DATA_TYC_GET()->return_type = prev;
+
+  if (current_return_type != TY_void) {
+    node_st *body = FUNDEF_BODY(node);
+    node_st *stmts = body ? FUNBODY_STMTS(body) : NULL;
+    node_st *last_stmt = NULL;
+
+    while (stmts != NULL) {
+      last_stmt = STMTS_STMT(stmts);
+      stmts = STMTS_NEXT(stmts);
+    }
+
+    if (last_stmt == NULL || NODE_TYPE(last_stmt) != NT_RETURNSTATEMENT) {
+      CTI(CTI_ERROR, true, "non-void function does not return a value on all paths");
+    }
+  }
 
   return node;
 }
@@ -340,6 +384,8 @@ node_st *TYCreturnstatement(node_st *node) {
 
   node_st *expr = RETURNSTATEMENT_EXPR(node);
   enum DeclarationType return_type = DATA_TYC_GET()->return_type;
+
+  // TODO: cannot return arrays
 
   if (return_type == TY_void) {
     if (expr != NULL) {
