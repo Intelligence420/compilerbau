@@ -388,8 +388,6 @@ node_st *TYCreturnstatement(node_st *node) {
   node_st *expr = RETURNSTATEMENT_EXPR(node);
   enum DeclarationType return_type = DATA_TYC_GET()->return_type;
 
-  // TODO: cannot return arrays
-
   if (return_type == TY_void) {
     if (expr != NULL) {
       CTI(CTI_ERROR, true, "cannot return expression from void function");
@@ -400,6 +398,8 @@ node_st *TYCreturnstatement(node_st *node) {
       CTI(CTI_ERROR, true, "cannot return void from non-void functon");
     } else if (return_type != EXPR_TYPE(expr)) {
       CTI(CTI_ERROR, true, "return type mismatch");
+    } else if (EXPR_DIMENSIONEN(expr) > 0) {
+      CTI(CTI_ERROR, true, "cannot return arrays");
     }
   }
 
