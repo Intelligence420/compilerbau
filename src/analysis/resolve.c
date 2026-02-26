@@ -122,7 +122,8 @@ node_st *RSOvar(node_st *node) {
   char *name = VAR_NAME(node);
   struct data_rso *data = DATA_RSO_GET();
 
-  Variable *var = vartable_get_variable(data->variables, name);
+  VariablePtr var = return_varref(data->variables, name);
+  // Variable *var = vartable_get_variable(data->variables, name);
 
   if (var == NULL) {
     CTI(CTI_ERROR, true, "cannot find variable with name %s", name);

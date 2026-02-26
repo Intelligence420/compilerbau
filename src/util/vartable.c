@@ -4,6 +4,8 @@
 #include "palm/str.h"
 #include <stdbool.h>
 
+// TODO: return VarReferenz
+// - count l
 static Variable *vartable_local_get_variable(VariableTable *table, char *name) {
   for (int i = 0; i < table->size; i++) {
     if (table->variables[i].valid && STReq(name, table->variables[i].name)) {
@@ -11,6 +13,33 @@ static Variable *vartable_local_get_variable(VariableTable *table, char *name) {
     }
   }
   return NULL;
+}
+
+static int vartable_local_get_variable_idx(VariableTable *table, char *name) {
+  for (int i = 0; i < table->size; i++) {
+    if (table->variables[i].valid && STReq(name, table->variables[i].name)) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+static Variable *vartable_local_get_variable_all(VariableTable *table, char *name) {
+  for (int i = 0; i < table->size; i++) {
+    if (STReq(name, table->variables[i].name)) {
+      return &table->variables[i];
+    }
+  }
+  return NULL;
+}
+
+static int vartable_local_get_variable_idx_all(VariableTable *table, char *name) {
+  for (int i = 0; i < table->size; i++) {
+    if (STReq(name, table->variables[i].name)) {
+      return i;
+    }
+  }
+  return -1;
 }
 
 #define INITIAL_CAPACITY 2
@@ -76,17 +105,55 @@ bool vartable_contains(VariableTable *table, char *name) {
   }
 }
 
-Variable *vartable_get_variable(VariableTable *table, char *name) {
-  Variable *var = vartable_local_get_variable(table, name);
-  if (var != NULL) {
-    Variable *new = MEMmalloc(sizeof(Variable));
-    *new = *var;
-    return new;
+VarReferenz *return_varref(VariableTable *table, char *name) {
+  VariableTable *curr = table;
+  int j = 0;
+  while (curr != NULL) {
+    Variable *var = vartable_local_get_variable(curr, name);
+    if (var != NULL) {
+      VarReferenz *varref = MEMmalloc(sizeof(VarReferenz));
+      varref->type = var->type;
+      varref->dim = var->dim;
+      varref->n = j;
+      varref->l = vartable_local_get_variable_idx(curr, name);
+      varref->readonly = var->readonly;
+      if (curr->parent == NULL) {
+        varref->reftype = REF_GLOBAL;
+      } else {
+        varref->reftype = REF_LOCAL;
+      }
+      return varref;
+    }
+    curr = curr->parent;
+    j++;
   }
 
-  if (table->parent == NULL) {
-    return NULL;
-  } else {
-    return vartable_get_variable(table->parent, name);
-  }
+  return NULL;
 }
+
+VarReferenz *return_varref_ignore_valid(VariableTable *table, char *name) {
+  VariableTable *curr = table;
+  int j = 0;
+  while (curr != NULL) {
+    Variable *var = vartable_local_get_variable_all(curr, name);
+    if (var != NULL) {
+      VarReferenz *varref = MEMmalloc(sizeof(VarReferenz));
+      varref->type = var->type;
+      varref->dim = var->dim;
+      varref->n = j;
+      varref->l = vartable_local_get_variable_idx_all(curr, name);
+      varref->readonly = var->readonly;
+      if (curr->parent == NULL) {
+        varref->reftype = REF_GLOBAL;
+      } else {
+        varref->reftype = REF_LOCAL;
+      }
+      return varref;
+    }
+    curr = curr->parent;
+    j++;
+  }
+
+  return NULL;
+}
+

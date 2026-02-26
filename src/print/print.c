@@ -86,6 +86,7 @@ node_st *PRTfunbody(node_st *node) {
 node_st *PRTfuncallstmt(node_st *node) {
 
   TRAVchildren(node);
+  printf(";\n");
 
   return node;
 }
@@ -98,7 +99,27 @@ node_st *PRTids(node_st *node) {
 }
 
 node_st *PRTvardef(node_st *node) {
-  TRAVchildren(node);
+  if (VARDEF_EXPORT(node)) {
+    printf("export ");
+  }
+
+  printf("%s", TYstr(VARDEF_TYPE(node)));
+
+  if (VARDEF_EXPRS(node) != NULL) {
+    printf("[");
+    TRAVexprs(node);
+    printf("]");
+  }
+
+  printf(" %s", VARDEF_NAME(node));
+
+  if (VARDEF_EXPR(node) != NULL) {
+    printf(" = ");
+    TRAVexpr(node);
+  }
+
+  printf(";\n");
+
   return node;
 }
 
@@ -108,16 +129,13 @@ node_st *PRTvardefs(node_st *node) {
 }
 
 node_st *PRTarrexpr(node_st *node) {
+  printf("[");
   TRAVchildren(node);
+  printf("]");
   return node;
 }
 
 node_st *PRTlocalfundef(node_st *node) {
-  TRAVchildren(node);
-  return node;
-}
-
-node_st *PRTglobaldef(node_st *node) {
   TRAVchildren(node);
   return node;
 }
@@ -357,6 +375,11 @@ node_st *PRTblock(node_st *node) {
  */
 node_st *PRTvar(node_st *node) {
   printf("%s", VAR_NAME(node));
+  if (VAR_EXPRS(node) != NULL) {
+    printf("[");
+    TRAVexprs(node);
+    printf("]");
+  }
   return node;
 }
 

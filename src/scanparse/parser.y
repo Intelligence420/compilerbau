@@ -176,8 +176,15 @@ funheader: decltype ID[name] BRACKET_L funparamdef[param] BRACKET_R {
 globaldec: EXTERN decltype ID SEMICOLON { $$ = ASTglobaldec(NULL, $2, $3); }
          | EXTERN decltype SQUAREBRACKET_L ids SQUAREBRACKET_R ID SEMICOLON { $$ = ASTglobaldec($4, $2, $6); };
 
-globaldef: EXPORT vardef { $$ = ASTglobaldef($2, true); }
-         | vardef        { $$ = ASTglobaldef($1, false); }
+globaldef: EXPORT vardef {
+             VARDEF_EXPORT($2) = true;
+             VARDEF_GLOBAL($2) = true;
+             $$ = $2;
+           }
+         | vardef        {
+             VARDEF_GLOBAL($1) = true;
+             $$ = $1;
+           }
          ;
 
 funparamdef:
@@ -312,12 +319,19 @@ expr:
   | constant                                      { $$ = $1; }
   | varref                                       { $$ = $1; }
   | funcall                                      { $$ = $1; }
+  | arrexpr                                      { $$ = $1; }
   ;
 
 funcall:
     ID BRACKET_L BRACKET_R        { $$ = ASTfuncall(NULL, $1); }
   | ID BRACKET_L exprs BRACKET_R  { $$ = ASTfuncall($3, $1); }
   ;
+
+arrexpr: SQUAREBRACKET_L exprs SQUAREBRACKET_R 
+        { 
+          $$ = ASTarrexpr($2); 
+        }
+       ;
 
 exprs:
     expr COMMA exprs { $$ = ASTexprs($1, $3); }

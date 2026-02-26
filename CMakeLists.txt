@@ -38,6 +38,13 @@ add_executable(civicc ${FLEX_CivicLexer_OUTPUTS} ${BISON_CivicParser_OUTPUTS}
     src/analysis/typecheck.c
     src/analysis/constants.c
 
+    # adjustment
+    src/adjustment/fortowhile.c
+    src/adjustment/whiletodowhile.c
+
+    #optimization
+    src/optimization/constantsfolding.c
+
     # util
     src/util/funtable.c src/util/memfree.c
     src/util/vartable.c 

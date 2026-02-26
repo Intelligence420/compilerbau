@@ -4,7 +4,10 @@ start phase RootPhase {
     actions {
         pass SPdoScanParse;
         Analysis;
+        Adjustment;
+        Optimization;
         Print;
+        //AssemblyCode;
         MemFree;
     }
 };
@@ -54,6 +57,84 @@ phase Analysis {
     }
 };
 
+/*** Adjustment Phase ***/
+
+phase Adjustment {
+    info = "Adjusts and normalizes the AST for assembly code generation",
+
+    actions {
+        traversal ForToWhile {
+            uid = FTW,
+            nodes = { Program, FunDef, Forstatement, Stmts },
+            travdata {
+                user VariableTablePtr variables
+            }
+        };
+
+        traversal WhileToDoWhile {
+            uid = WDW,
+            nodes = { Program, FunDef, Whilestatement, Var, FunCall },
+            travdata {
+                user VariableTablePtr variables,
+                user FunctionTablePtr functions,
+                bool fix_mode
+            }
+        };
+
+/*
+        traversal ArrayFlatten {
+            uid = AFL,
+            nodes = { Program, FunDef, Var },
+            travdata {
+                user VariableTablePtr variables
+            }
+        };
+
+        traversal SplitVarDef {
+            uid = SVD,
+            nodes = { FunBody },
+            travdata {
+                user VariableTablePtr variables
+            }
+        };
+        */
+    }
+};
+
+phase Optimization {
+    info = "Performs simple optimizations (only constant folding)",
+
+    actions {
+        traversal ConstantsFolding {
+            uid = CF,
+            nodes = Expr | { Assign, VarDef, Returnstatement, Ifstatement, Whilestatement, Dostatement, Forstatement, FunCallStmt },
+            travdata {
+                user ConstantTablePtr constants,
+                user VariableTablePtr variables
+            }
+        };
+    }
+};
+
+/*
+phase AssemblyCode {
+    info = "Generates assembly code from the AST",
+
+    actions {
+        traversal CodeGen {
+            uid = CGN,
+            nodes = { },
+            travdata {
+                user VariableTablePtr variables,
+                user FunctionTablePtr functions,
+                DeclarationType return_type,
+                user ConstantTablePtr constants
+            }
+        };
+    }
+};
+*/
+
 traversal MemFree {
     uid = FREE,
     nodes = { Program, FunDef, Var, FunCall }
@@ -84,10 +165,11 @@ enum DeclarationType {
     }
 };
 
-nodeset Decl = {FunDef, FunDec, GlobalDec, GlobalDef};
+// TODO: GlobalDef => VarDef
+nodeset Decl = {FunDef, FunDec, GlobalDec, VarDef};
 nodeset Stmt = {Assign, FunCallStmt, Ifstatement, Whilestatement, Dostatement, Forstatement, Returnstatement};
 nodeset Expr {
-    nodes = {Num, Float, Bool, Binop, Monop, FunCall, VarRef, TypeCast},
+    nodes = {Num, Float, Bool, Binop, Monop, FunCall, VarRef, TypeCast, ArrExpr, VarDef, Param},
 
     attributes {
         DeclarationType type,
@@ -143,16 +225,6 @@ node GlobalDec {
         string name { constructor }
     }
 };
-
-node GlobalDef {
-    children {
-        VarDef dec { constructor, mandatory }
-    },
-
-    attributes {
-        bool export { constructor }
-    }
-}; 
 
 node ArrExpr {
     children {
@@ -221,7 +293,10 @@ node VarDef {
 
     attributes {
         DeclarationType type { constructor },
-        string name { constructor }
+        string name { constructor },
+        bool export,
+        bool global,
+        int l
     }
 };
 

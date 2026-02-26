@@ -132,6 +132,36 @@ node_st *TYCmonop(node_st *node) {
   return node;
 }
 
+node_st *TYCarrexpr(node_st *node) {
+  TRAVchildren(node);
+  node_st *exprs = ARREXPR_EXPRS(node);
+
+  node_st *first_expr = EXPRS_EXPR(exprs);
+  enum DeclarationType base_type = EXPR_TYPE(first_expr);
+  int dim = EXPR_DIMENSIONEN(first_expr);
+
+  node_st *while_expr = EXPRS_NEXT(exprs);
+  while (while_expr != NULL) {
+    node_st *expr = EXPRS_EXPR(while_expr);
+    if (EXPR_TYPE(expr) != base_type) {
+      CTI(CTI_ERROR, true,
+          "Type mismatch in array expression: expected %s, but got %s",
+          TYstr(base_type), TYstr(EXPR_TYPE(expr)));
+    }
+    if (EXPR_DIMENSIONEN(expr) != dim) {
+      CTI(CTI_ERROR, true,
+          "Dimension mismatch in array expression: expected %d, but got %d",
+          dim, EXPR_DIMENSIONEN(expr));
+    }
+    while_expr = EXPRS_NEXT(while_expr);
+  }
+
+  EXPR_TYPE(node) = base_type;
+  EXPR_DIMENSIONEN(node) = dim + 1;
+
+  return node;
+}
+
 node_st *TYCfuncall(node_st *node) {
   TRAVchildren(node);
   FunctionPtr func = FUNCALL_FUNPTR(node);
@@ -242,9 +272,22 @@ node_st *TYCtypecast(node_st *node) {
 }
 
 // OTHER THINGERS
+node_st *TYCparam(node_st *node) {
+  TRAVchildren(node);
+  int dim = 0;
+  node_st *ids = PARAM_IDS(node);
+  while (ids != NULL) {
+    dim++;
+    ids = IDS_NEXT(ids);
+  }
+  PARAM_DIMENSIONEN(node) = dim;
+  return node;
+}
+
 node_st *TYCvardef(node_st *node) {
   TRAVchildren(node);
 
+  int dim = 0;
   node_st *exprs = VARDEF_EXPRS(node);
   while (exprs != NULL) {
     node_st *expr = EXPRS_EXPR(exprs);
@@ -253,8 +296,10 @@ node_st *TYCvardef(node_st *node) {
           "Array expression index must be integer. expected int, but got %s",
           TYstr(EXPR_TYPE(expr)));
     }
+    dim++;
     exprs = EXPRS_NEXT(exprs);
   }
+  VARDEF_DIMENSIONEN(node) = dim;
 
   node_st *expr = VARDEF_EXPR(node);
   enum DeclarationType type = VARDEF_TYPE(node);
@@ -264,8 +309,15 @@ node_st *TYCvardef(node_st *node) {
       CTI(CTI_ERROR, true,
           "Type error in variable definition: initialization type mismatch.");
     }
-    if (VARDEF_EXPRS(node) != NULL && EXPR_DIMENSIONEN(expr) != 0) {
-      CTI(CTI_ERROR, true, "cannot initialize array with array expression");
+    int var_dim = VARDEF_DIMENSIONEN(node);
+    int expr_dim = EXPR_DIMENSIONEN(expr);
+    if (var_dim == 0 && expr_dim != 0) {
+      CTI(CTI_ERROR, true, "cannot initialize scalar with array");
+    } else if (var_dim > 0 && expr_dim != 0) {
+      if (expr_dim != var_dim || NODE_TYPE(expr) != NT_ARREXPR) {
+        CTI(CTI_ERROR, true,
+            "cannot initialize array with incompatible expression");
+      }
     }
   }
 
