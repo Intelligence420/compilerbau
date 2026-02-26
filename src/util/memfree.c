@@ -2,7 +2,7 @@
 #include "ccn/dynamic_core.h"
 #include "ccngen/ast.h"
 #include "palm/memory.h"
-#include "user_types.h"
+#include "util/consttable.h"
 #include "util/funtable.h"
 #include "util/vartable.h"
 
@@ -10,6 +10,7 @@ node_st *FREEprogram(node_st *node) {
   TRAVchildren(node);
   funtable_free(PROGRAM_FUNCTIONS(node));
   vartable_free(PROGRAM_VARIABLES(node));
+  consttable_free(PROGRAM_CONSTANTS(node));
   return node;
 }
 

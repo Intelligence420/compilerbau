@@ -1,0 +1,76 @@
+extern void printInt(int val);
+extern void printNewlines(int n);
+
+int getUpperLimit() {
+    return 3;
+}
+
+export int main() {
+    int i = 0;
+    int a = 0;
+    int b = 0;
+    int k = 0;
+    int m = 0;
+    bool t = true;
+
+    int y = 0;
+
+    // 1. Standard loop
+    i = 0;
+    while (i < 5) {
+        printInt(i);
+        i = i + 1;
+    }
+    printNewlines(1);
+
+    // 2. Loop that doesn't execute
+    while (i < 0) {
+        printInt(888);
+    }
+    printNewlines(1);
+
+    // 3. Nested loops (Testing deep traversal)
+    a = 0;
+    while (a < 2) {
+        b = 0;
+        while (b < 2) {
+            printInt(a * 10 + b);
+            b = b + 1;
+        }
+        a = a + 1;
+    }
+    printNewlines(1);
+
+    // 4. Complex condition with function call
+    // This tests if FunCall pointers are correctly refreshed
+    k = 0;
+    while (k < getUpperLimit()) {
+        printInt(k);
+        k = k + 1;
+    }
+    printNewlines(1);
+
+    // 5. Short-circuiting / Complex boolean logic
+    t = true;
+    m = 0;
+    while (t && m < 2) {
+        printInt(m);
+        m = m + 1;
+        if (m == 2) {
+            t = false;
+        }
+    }
+    printNewlines(1);
+
+    // 6. While inside For (Testing interaction with ForToWhile)
+    for (int x = 0, 1) {
+        y = 0;
+        while (y < 2) {
+            printInt(x * 100 + y);
+            y = y + 1;
+        }
+    }
+    printNewlines(1);
+
+    return 0;
+}

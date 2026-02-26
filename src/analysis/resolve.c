@@ -42,6 +42,19 @@ node_st *RSOfundef(node_st *node) {
   return node;
 }
 
+node_st *RSOfundec(node_st *node) {
+  struct data_rso *data = DATA_RSO_GET();
+  VariableTable *variables_safe = data->variables;
+  data->variables = create_vartable(variables_safe);
+
+  TRAVchildren(node);
+
+  vartable_free(data->variables);
+  data->variables = variables_safe;
+
+  return node;
+}
+
 node_st *RSOfuncall(node_st *node) {
   TRAVchildren(node);
 
@@ -64,8 +77,15 @@ node_st *RSOvardef(node_st *node) {
   char *name = VARDEF_NAME(node);
   enum DeclarationType type = VARDEF_TYPE(node);
 
+  int dim = 0;
+  node_st *exprs = VARDEF_EXPRS(node);
+  while (exprs != NULL) {
+    dim++;
+    exprs = EXPRS_NEXT(exprs);
+  }
+
   struct data_rso *data = DATA_RSO_GET();
-  Variable var = {.name = STRcpy(name), .type = type};
+  Variable var = {.name = STRcpy(name), .type = type, .dim = dim};
   vartable_insert(data->variables, var);
 
   return node;
@@ -79,6 +99,7 @@ node_st *RSOglobaldec(node_st *node) {
 
   struct data_rso *data = DATA_RSO_GET();
 
+  int dim = 0;
   // allen IDs in Liste einfügen und den Parameter-Typ vom äußeren Typ ableiten
   node_st *ids = GLOBALDEC_IDS(node);
   while (ids != NULL) {
@@ -86,9 +107,10 @@ node_st *RSOglobaldec(node_st *node) {
     Variable var = {.name = STRcpy(id_name), .type = type};
     vartable_insert(data->variables, var);
     ids = IDS_NEXT(ids);
+    dim++;
   }
 
-  Variable var = {.name = STRcpy(name), .type = type};
+  Variable var = {.name = STRcpy(name), .type = type, .dim = dim};
   vartable_insert(data->variables, var);
 
   return node;
@@ -100,12 +122,30 @@ node_st *RSOvar(node_st *node) {
   char *name = VAR_NAME(node);
   struct data_rso *data = DATA_RSO_GET();
 
-  Variable *var = vartable_get_variable(data->variables, name);
+  VariablePtr var = return_varref(data->variables, name);
+  // Variable *var = vartable_get_variable(data->variables, name);
+
   if (var == NULL) {
     CTI(CTI_ERROR, true, "cannot find variable with name %s", name);
   } else {
     VAR_VARPTR(node) = var;
   }
+
+  return node;
+}
+
+node_st *RSOforstatement(node_st *node) {
+  struct data_rso *data = DATA_RSO_GET();
+
+  char *var_name = FORSTATEMENT_VARIABLE(node);
+
+  Variable var = {.name = STRcpy(var_name), .type = TY_int, .dim = 0};
+  int idx = vartable_insert_nocheck(data->variables, var);
+  data->variables->variables[idx].readonly = true;
+
+  TRAVchildren(node);
+
+  data->variables->variables[idx].valid = false;
 
   return node;
 }
@@ -119,15 +159,17 @@ node_st *RSOparam(node_st *node) {
   struct data_rso *data = DATA_RSO_GET();
 
   // allen IDs in Liste einfügen und den Parameter-Typ vom äußeren Typ ableiten
+  int dim = 0;
   node_st *ids = PARAM_IDS(node);
   while (ids != NULL) {
     char *id_name = IDS_ID(ids);
-    Variable var = {.name = STRcpy(id_name), .type = type};
+    Variable var = {.name = STRcpy(id_name), .type = TY_int, .dim = 0};
     vartable_insert(data->variables, var);
     ids = IDS_NEXT(ids);
+    dim++;
   }
 
-  Variable var = {.name = STRcpy(name), .type = type};
+  Variable var = {.name = STRcpy(name), .type = type, .dim = dim};
   vartable_insert(data->variables, var);
 
   return node;

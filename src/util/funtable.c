@@ -32,6 +32,7 @@ void funtable_insert(FunctionTable *table, Function fun) {
 void funtable_free(FunctionTable *table) {
   for (int i = 0; i < table->size; i++) {
     MEMfree(table->functions[i].name);
+    MEMfree(table->functions[i].params.list);
   }
 
   MEMfree(table->functions);
