@@ -313,6 +313,11 @@ node_st *PRTifstatement(node_st *node) {
 
   TRAVblock(node);
 
+  if (IFSTATEMENT_ELSEBLOCK(node) != NULL) {
+    printf("else\n");
+    TRAVelseblock(node);
+  }
+
   return node;
 }
 

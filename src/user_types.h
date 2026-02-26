@@ -1,5 +1,7 @@
 #pragma once
 
+// #define CCN_USES_UNSAFE_ACKNOWLEDGE
+
 #include "palm/hash_table.h"
 #include "util/funtable.h"
 #include "util/vartable.h"
