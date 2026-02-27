@@ -89,6 +89,14 @@ phase Adjustment {
             nodes = { Program, FunDef }
         };
 
+        traversal RenameNestedFunctions {
+            uid = RNF,
+            nodes = { Program, FunDef, FunCall },
+            travdata {
+                string name_prefix
+            }
+        };
+
 /*
         traversal ArrayFlatten {
             uid = AFL,

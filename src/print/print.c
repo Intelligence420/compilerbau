@@ -95,6 +95,7 @@ node_st *PRTfunbody(node_st *node) {
   indent++;
   TRAVchildren(node);
   indent--;
+  print_indent();
   printf("}\n\n");
   return node;
 }

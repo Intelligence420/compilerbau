@@ -1,0 +1,17 @@
+// Test case for nested function renaming traversal (RNF)
+// void foo() { void bar() {} } -> void foo() { void foo*bar() {} }
+void foo() {
+    void bar() {
+        void baz() {
+            if (true) {
+                return;
+            }
+        }
+        baz();
+    }
+    bar();
+}
+
+void main() {
+    foo();
+}
