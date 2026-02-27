@@ -41,6 +41,7 @@ add_executable(civicc ${FLEX_CivicLexer_OUTPUTS} ${BISON_CivicParser_OUTPUTS}
     # adjustment
     src/adjustment/fortowhile.c
     src/adjustment/whiletodowhile.c
+    src/adjustment/voidreturn.c
 
     #optimization
     src/optimization/constantsfolding.c

@@ -65,9 +65,12 @@ phase Adjustment {
     actions {
         traversal ForToWhile {
             uid = FTW,
-            nodes = { Program, FunDef, Forstatement, Stmts },
+            nodes = { Program, FunDef, Forstatement, Stmts, Var, FunCall },
             travdata {
-                user VariableTablePtr variables
+                user VariableTablePtr variables,
+                user FunctionTablePtr functions,
+                bool free_mode, // indicates whether to free the original Forstatement after transformation
+                bool fix_mode // indicates whether to fix the original Forstatement after transformation
             }
         };
 
@@ -79,6 +82,11 @@ phase Adjustment {
                 user FunctionTablePtr functions,
                 bool fix_mode
             }
+        };
+
+        traversal voidReturn {
+            uid = VR,
+            nodes = { Program, FunDef }
         };
 
 /*
