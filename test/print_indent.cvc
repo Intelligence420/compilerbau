@@ -1,0 +1,66 @@
+// Global Variable Declarations (GlobalDec)
+extern int g_dec1;
+extern int g_dec2;
+
+// Global Variable Definitions (VarDef)
+int g_def = 42;
+export float g_export = 3.14159;
+
+// Function Declarations (FunDec)
+extern void extern_func(int a, bool b);
+
+// Function Definitions (FunDef)
+void demo_expressions(int n) {
+    // Local Variable Definitions (VarDef)
+    int x = 10;
+    float f = 2.5;
+    bool b = true;
+    
+    // Array Expressions (ArrExpr)
+    int[3] arr = [1, 2, 3];
+    
+    // Binary Operations (Binop)
+    x = n + 5 * 2 / (3 - 1);
+    b = (x > 0) && (x <= 100) || (x == 42);
+    
+    // Monadic Operations (Monop)
+    x = -x;
+    b = !b;
+    
+    // Type Casts (TypeCast)
+    f = (float) x;
+    
+    // Function Call as Expression (FunCall)
+    extern_func(x, b);
+}
+
+export int main() {
+    // Control Flow Statements
+    int i = 0;
+    
+    // If-Else Statement (Ifstatement)
+    if (i == 0) {
+        i = 1;
+    } else {
+        i = 2;
+    }
+    
+    // While Loop (Whilestatement)
+    while (i < 10) {
+        i = i + 1;
+    }
+    
+    // Do-While Loop (Dostatement)
+    do {
+        i = i - 1;
+    } while (i > 0);
+    
+    // For Loop (Forstatement)
+    for (int j = 0, 10, 2) {
+        // Function Call as Statement (FunCallStmt)
+        demo_expressions(j);
+    }
+    
+    // Return Statement (Returnstatement)
+    return 0;
+}

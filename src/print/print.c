@@ -16,10 +16,19 @@
 #include "palm/dbug.h"
 #include <stdio.h>
 
+static int indent = 0;
+
+static void print_indent() {
+  for (int i = 0; i < indent; i++) {
+    printf("  ");
+  }
+}
+
 /**
  * @fn PRTprogram
  */
 node_st *PRTprogram(node_st *node) {
+  indent = 0;
   TRAVchildren(node);
   return node;
 }
@@ -43,6 +52,7 @@ node_st *PRTstmts(node_st *node) {
  */
 node_st *PRTassign(node_st *node) {
 
+  print_indent();
   if (ASSIGN_LET(node) != NULL) {
     TRAVlet(node);
     printf(" = ");
@@ -55,6 +65,10 @@ node_st *PRTassign(node_st *node) {
 }
 
 node_st *PRTfundef(node_st *node) {
+  print_indent();
+  if (FUNDEF_EXPORT(node)) {
+    printf("export ");
+  }
   TRAVheader(node);
   TRAVbody(node);
 
@@ -77,14 +91,17 @@ node_st *PRTfunheader(node_st *node) {
 }
 
 node_st *PRTfunbody(node_st *node) {
-  printf("\n{\n");
+  printf("{\n");
+  indent++;
   TRAVchildren(node);
-  printf("}\n");
+  indent--;
+  printf("}\n\n");
   return node;
 }
 
 node_st *PRTfuncallstmt(node_st *node) {
 
+  print_indent();
   TRAVchildren(node);
   printf(";\n");
 
@@ -99,6 +116,7 @@ node_st *PRTids(node_st *node) {
 }
 
 node_st *PRTvardef(node_st *node) {
+  print_indent();
   if (VARDEF_EXPORT(node)) {
     printf("export ");
   }
@@ -141,13 +159,17 @@ node_st *PRTlocalfundef(node_st *node) {
 }
 
 node_st *PRTglobaldec(node_st *node) {
+  print_indent();
+  printf("extern %s %s;\n", TYstr(GLOBALDEC_TYPE(node)), GLOBALDEC_NAME(node));
   TRAVchildren(node);
   return node;
 }
 
 node_st *PRTfundec(node_st *node) {
-
+  print_indent();
+  printf("extern ");
   TRAVchildren(node);
+  printf(";\n");
 
   return node;
 }
@@ -295,6 +317,7 @@ node_st *PRTtypecast(node_st *node) {
 }
 
 node_st *PRTvardec(node_st *node) {
+  print_indent();
   char *decltype = TYstr(VARDEF_TYPE(node));
 
   printf("%s %s", decltype, VARDEF_NAME(node));
@@ -307,7 +330,25 @@ node_st *PRTvardec(node_st *node) {
 }
 
 node_st *PRTifstatement(node_st *node) {
+  print_indent();
   printf("if (");
+  TRAVexpr(node);
+  printf(")\n");
+
+  TRAVblock(node);
+
+  if (IFSTATEMENT_ELSEBLOCK(node) != NULL) {
+    print_indent();
+    printf("else\n");
+    TRAVelseblock(node);
+  }
+
+  return node;
+}
+
+node_st *PRTwhilestatement(node_st *node) {
+  print_indent();
+  printf("while (");
   TRAVexpr(node);
   printf(")\n");
 
@@ -316,21 +357,13 @@ node_st *PRTifstatement(node_st *node) {
   return node;
 }
 
-node_st *PRTwhilestatement(node_st *node) {
-  printf("while (");
-  TRAVexpr(node);
-  printf(") \n");
-
-  TRAVblock(node);
-
-  return node;
-}
-
 node_st *PRTdostatement(node_st *node) {
+  print_indent();
   printf("do\n");
 
   TRAVblock(node);
 
+  print_indent();
   printf("while (");
   TRAVexpr(node);
   printf(");\n");
@@ -339,6 +372,7 @@ node_st *PRTdostatement(node_st *node) {
 }
 
 node_st *PRTforstatement(node_st *node) {
+  print_indent();
   printf("for (int %s = ", FORSTATEMENT_VARIABLE(node));
   TRAVinit(node);
   printf(", ");
@@ -356,6 +390,7 @@ node_st *PRTforstatement(node_st *node) {
 }
 
 node_st *PRTreturnstatement(node_st *node) {
+  print_indent();
   printf("return ");
   TRAVexpr(node);
   printf(";\n");
@@ -363,8 +398,12 @@ node_st *PRTreturnstatement(node_st *node) {
 }
 
 node_st *PRTblock(node_st *node) {
+  print_indent();
   printf("{\n");
+  indent++;
   TRAVchildren(node);
+  indent--;
+  print_indent();
   printf("}\n");
 
   return node;
