@@ -84,6 +84,11 @@ phase Adjustment {
             }
         };
 
+        traversal voidReturn {
+            uid = VR,
+            nodes = { Program, FunDef }
+        };
+
 /*
         traversal ArrayFlatten {
             uid = AFL,

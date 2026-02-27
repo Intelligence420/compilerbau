@@ -1,0 +1,63 @@
+// 1. Void function without return
+export void void_no_return_empty() {
+}
+
+// 2. Void function without return
+export void void_no_return_stmts(int a) {
+    a = a + 1;
+}
+
+// 3. Void function with return
+export void void_with_return() {
+    return;
+}
+
+// 4. Void function with internal return
+export void void_with_internal_return(bool b) {
+    if (b) {
+        return;
+    }
+}
+
+// 5. Int function with return
+export int int_function() {
+    return 42;
+}
+
+// 6. Void function with nested void function
+export void nested_test() {
+    void inner() {
+        // needs return
+    }
+    inner();
+}
+
+// 7. Void function with return in if
+void main() {
+    void_no_return_empty();
+    void_no_return_stmts(5);
+    void_with_return();
+    void_with_internal_return(true);
+    int_function();
+    nested_test();
+}
+
+// 8. Void function with return in if
+void main2() {
+    if (true){
+        return;
+    }
+}
+
+// 9. Void function with nested void function
+void foo() {
+    int sum = 0;
+    int bar = 1;
+    void bar() {
+        bar = bar + 1;
+    }
+    for (int i = 0, 25, 5) {
+        bar();
+        sum = sum;
+    }
+}
