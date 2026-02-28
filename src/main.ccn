@@ -111,6 +111,7 @@ phase Adjustment {
 
 phase Optimization {
     info = "Performs simple optimizations (only constant folding)",
+    gate = do_optimization,
 
     actions {
         traversal ConstantsFolding {
@@ -126,6 +127,7 @@ phase Optimization {
 
 phase AssemblyCode {
     info = "Generates assembly code from the AST",
+    gate = do_codegen,
 
     actions {
         traversal Constants {
