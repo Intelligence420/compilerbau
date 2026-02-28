@@ -16,7 +16,7 @@ typedef struct Variable {
 enum ReferenzLevel {
   REF_LOCAL,
   REF_GLOBAL,
-  REF_EXTERN, // ignore for now
+  REF_EXTERN, 
 };
 
 // TODO:

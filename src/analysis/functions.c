@@ -54,7 +54,7 @@ static Function from_header(node_st *node, bool isextern) {
   Parameters params = {.arity = arity, .list = list};
 
   Function fun = {
-      .name = STRcpy(func_name), .return_type = type, .params = params};
+      .name = STRcpy(func_name), .return_type = type, .params = params, .isextern = isextern};
   return fun;
 }
 
@@ -93,7 +93,7 @@ node_st *FNSfundec(node_st *node) {
   struct data_fns *data = DATA_FNS_GET();
 
   node_st *header = FUNDEC_HEADER(node);
-  Function fun = from_header(header, false);
+  Function fun = from_header(header, true);
   funtable_insert(data->functions, fun);
 
   return node;

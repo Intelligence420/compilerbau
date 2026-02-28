@@ -17,6 +17,7 @@ typedef struct Function {
   char *name;
   enum DeclarationType return_type;
   Parameters params;
+  bool isextern;
 } Function;
 
 typedef struct FunctionTable {

@@ -117,7 +117,9 @@ VarReferenz *return_varref(VariableTable *table, char *name) {
       varref->n = j;
       varref->l = vartable_local_get_variable_idx(curr, name);
       varref->readonly = var->readonly;
-      if (curr->parent == NULL) {
+      if (var->isextern) {
+        varref->reftype = REF_EXTERN;
+      } else if (curr->parent == NULL) {
         varref->reftype = REF_GLOBAL;
       } else {
         varref->reftype = REF_LOCAL;
@@ -143,7 +145,9 @@ VarReferenz *return_varref_ignore_valid(VariableTable *table, char *name) {
       varref->n = j;
       varref->l = vartable_local_get_variable_idx_all(curr, name);
       varref->readonly = var->readonly;
-      if (curr->parent == NULL) {
+      if (var->isextern) {
+        varref->reftype = REF_EXTERN;
+      } else if (curr->parent == NULL) {
         varref->reftype = REF_GLOBAL;
       } else {
         varref->reftype = REF_LOCAL;
