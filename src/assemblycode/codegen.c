@@ -169,7 +169,7 @@ void CGNfini(void) {
 }
 
 /* CGNprogram 
-   VM-Spezifikation (Abschnitt 2.2.1 - Order of operation):
+   VM-Spezifikation (2.2.1 ):
     Die VM Schrittfolge:
         1. Module laden und verifizieren
         2. Global-Tabelle initialisieren (Typen, nicht Werte)
@@ -304,13 +304,6 @@ node_st *CGNprogram(node_st *node) {
 
 
 /* CGNfundef
-   Aufgaben:
-    1. Label für die Funktion ausgeben (Funktionsname als Label)
-    2. Scope wechseln (Variables/Functions auf FunDef-Tabellen setzen)
-    3. Nesting-Depth erhöhen
-    4. Body traversieren (dort wird esr + Instruktionen generiert)
-    5. Scope wiederherstellen
- 
   VM-Spezifikation:
     Jede Funktion beginnt mit einem Label, gefolgt von esr (Enter Subroutine).
     Dann folgt der Funktions-Body, der mit einem return-Statement endet. */
@@ -376,24 +369,13 @@ node_st *CGNglobaldec(node_st *node) {
     return node;
 }
 
-/* CGNfunbody
-   Aufgaben:
-    1. Anzahl lokaler Variablen zählen (VarDefs in FUNBODY_DECL)
-       ACHTUNG: Parameter sind NICHT inkludiert, die sind bereits im Frame.
-       Aber der esr-Wert muss die Anzahl ALLER lokalen Slots sein,
-       also params + locals.
-    2. esr-Instruktion ausgeben
-    3. Statements traversieren
- 
+/* CGNfunbody 
    VM-Spezifikation (esr, Abschnitt 1.4.4):
     "esr L — Enter subroutine. Advances the top of the stack with L elements,
      thus reserving space for L local variables."
     "esr should be issued at the beginning of a subroutine, thus ensuring that
      the locals and arguments are contiguous in the stack"
-    "the first argument is addressable as local 0, and so on."
- 
-  WICHTIG: L bei esr ist die Anzahl der ZUSÄTZLICHEN lokalen Variablen,
-  NICHT inklusive der Parameter (die sind bereits im Activation Record). */
+    "the first argument is addressable as local 0, and so on." */
 node_st *CGNfunbody(node_st *node) {
     struct data_cgn *data = DATA_CGN_GET();
     int local_slots = data->total_slots - data->param_slots;
@@ -679,10 +661,6 @@ node_st *CGNarrexpr(node_st *node) {
         exprs = EXPRS_NEXT(exprs);
     }
     
-    // NOTE: This implementation currently only allocates the array of size 'count'.
-    // It does NOT yet populate it with the expressions, which remain as-is on the stack.
-    // Proper population would require temporary variables or stack manipulation.
-    
     // First, push elements (they will stay on the stack for now)
     TRAVdo(ARREXPR_EXPRS(node));
     
@@ -696,51 +674,3 @@ node_st *CGNarrexpr(node_st *node) {
     emit("%cnewa", type_prefix(EXPR_TYPE(node)));
     return node;
 }
-
-/*ZUSÄTZLICHE HINWEISE UND OFFENE PUNKTE */
-
-/*
- * TODO: [WICHTIG] Import-Index-Tracking implementieren
- *   Problem: jsre benötigt den Index in der Import-Tabelle.
- *   Die Import-Tabelle wird durch die Reihenfolge der .importfun
- *   Pseudo-Instruktionen definiert.
- *   → Einfaches Array/Map: Funktionsname → Import-Index
- *   Gleiches gilt für .importvar → Variable-Import-Index
- *
- * TODO: [WICHTIG] Global-Variable-Index-Tracking implementieren
- *   Problem: iloadg/istoreg benötigen den Index in der Global-Tabelle.
- *   Die Global-Tabelle wird durch die Reihenfolge der .global
- *   Pseudo-Instruktionen definiert.
- *   → Die VarReferenz->l für REF_GLOBAL könnte direkt nutzbar sein,
- *     WENN die Reihenfolge in der VariableTable mit der .global-Reihenfolge
- *     übereinstimmt. Dies muss verifiziert werden!
- *
- * TODO: [WICHTIG] Verschachtelte Funktionen korrekt behandeln
- *   Nach RenameNestedFunctions sind die Namen eindeutig (mit '*' Separator),
- *   aber die Funktionen sind NICHT flachgeklopft - sie sind immer noch
- *   in FunBody->FunDefs verschachtelt.
- *   Optionen:
- *   a) Alle Funktionen als global behandeln (einfach, erfordert ggf. isrg überall)
- *   b) Verschachtelungsebene korrekt tracken für isr/isrn/isrl
- *   c) Einen zusätzlichen Adjustment-Pass schreiben der Funktionen flachklopft
- *
- * TODO: [MITTEL] Label-Format standardisieren
- *   Labels sollten ein konsistentes Format haben, z.B.:
- *   - Funktionen: Funktionsname (nach RenameNested)
- *   - If-Labels: "if_else_%d", "if_end_%d"
- *   - Do-While-Labels: "do_loop_%d"
- *   - Für Jump/Branch: Labels statt numerische Offsets verwenden
- *
- * TODO: [MITTEL] emit()-Funktionen vollständig implementieren
- *   Die emit(), emit_label(), emit_pseudo() Hilfsfunktionen müssen
- *   mit variadischen Argumenten (va_list) implementiert werden.
- *
- *
- * TODO: [NIEDRIG] Ausgabedatei-Handling verbessern
- *   Aktuell über global.output_file. Könnte auch per Travdata
- *   oder als Parameter an die Phase übergeben werden.
- */
- 
- /*
- make -C build-debug && ./test/codegen_tests/run_codegen_tests.bash
- */
