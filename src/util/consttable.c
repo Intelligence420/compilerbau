@@ -44,6 +44,9 @@ int consttable_insert(ConstantTable *table, Constant con) {
 }
 
 void consttable_free(ConstantTable *table) {
+  if (table == NULL) {
+    return;
+  }
   MEMfree(table->constants);
   MEMfree(table);
 }

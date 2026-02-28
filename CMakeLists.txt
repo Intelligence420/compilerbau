@@ -36,7 +36,6 @@ add_executable(civicc ${FLEX_CivicLexer_OUTPUTS} ${BISON_CivicParser_OUTPUTS}
     src/analysis/functions.c
     src/analysis/resolve.c
     src/analysis/typecheck.c
-    src/analysis/constants.c
 
     # adjustment
     src/adjustment/fortowhile.c
@@ -52,6 +51,9 @@ add_executable(civicc ${FLEX_CivicLexer_OUTPUTS} ${BISON_CivicParser_OUTPUTS}
     src/util/funtable.c src/util/memfree.c
     src/util/vartable.c 
     src/util/consttable.c
+
+    # assemblycode
+    src/assemblycode/constants.c
 )
 
 target_compile_options(civicc PRIVATE

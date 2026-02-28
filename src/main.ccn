@@ -7,7 +7,7 @@ start phase RootPhase {
         Adjustment;
         Optimization;
         Print;
-        //AssemblyCode;
+        AssemblyCode;
         MemFree;
     }
 };
@@ -44,14 +44,6 @@ phase Analysis {
             nodes = { Program, Assign, VarDef, FunDef, Var } | (Stmt - { FunCallStmt }) | Expr,
             travdata {
                 DeclarationType return_type
-            }
-        };
-
-        traversal Constants {
-            uid = CST,
-            nodes = { Program, Num, Float },
-            travdata {
-                user ConstantTablePtr constants
             }
         };
     }
@@ -105,18 +97,10 @@ phase Adjustment {
             }
         };
 
-/*
+        /*
         traversal ArrayFlatten {
             uid = AFL,
             nodes = { Program, FunDef, Var },
-            travdata {
-                user VariableTablePtr variables
-            }
-        };
-
-        traversal SplitVarDef {
-            uid = SVD,
-            nodes = { FunBody },
             travdata {
                 user VariableTablePtr variables
             }
@@ -140,11 +124,19 @@ phase Optimization {
     }
 };
 
-/*
 phase AssemblyCode {
     info = "Generates assembly code from the AST",
 
     actions {
+        traversal Constants {
+            uid = CST,
+            nodes = { Program, Num, Float },
+            travdata {
+                user ConstantTablePtr constants
+            }
+        };
+
+        /*
         traversal CodeGen {
             uid = CGN,
             nodes = { },
@@ -155,9 +147,10 @@ phase AssemblyCode {
                 user ConstantTablePtr constants
             }
         };
+        */
     }
 };
-*/
+
 
 traversal MemFree {
     uid = FREE,
