@@ -1,0 +1,13 @@
+extern void printInt(int val);
+
+int globalVar = 10;
+
+void localFunc(int x) {
+    printInt(x);
+}
+
+void main() {
+    int localVariable = 5;
+    localFunc(localVariable);
+    printInt(globalVar);
+}
