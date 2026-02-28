@@ -1,0 +1,35 @@
+extern void printInt(int val);
+extern void printNewlines(int num);
+
+export int main() {
+    int a = 1;
+    int b = 2;
+    int c = 3;
+    int d = 4;
+    int e = 5;
+    int result;
+    bool b1;
+    bool b2;
+    bool b3;
+    
+    // Complex nested expression
+    result = (((a + b) * (c - d)) / (e % 2)) + (a * b * c * d * e) / (a + b + c + d + e);
+    printInt(result); 
+    // ((3 * -1) / 1) + (120 / 15) = -3 + 8 = 5
+    printNewlines(1);
+    
+    // Complex boolean / logical expression
+    b1 = true;
+    b2 = false;
+    b3 = (a < b) && (c >= d) || (e == 5) && !b2;
+    // (1 < 2) && (3 >= 4) || (5 == 5) && !false
+    // T && F || T && T = F || T = T
+    if (b3) {
+        printInt(1);
+    } else {
+        printInt(0);
+    }
+    printNewlines(1);
+    
+    return 0;
+}

@@ -672,7 +672,27 @@ node_st *CGNtypecast(node_st *node) {
 }
 
 node_st *CGNarrexpr(node_st *node) {
+    int count = 0;
+    node_st *exprs = ARREXPR_EXPRS(node);
+    while (exprs != NULL) {
+        count++;
+        exprs = EXPRS_NEXT(exprs);
+    }
+    
+    // NOTE: This implementation currently only allocates the array of size 'count'.
+    // It does NOT yet populate it with the expressions, which remain as-is on the stack.
+    // Proper population would require temporary variables or stack manipulation.
+    
+    // First, push elements (they will stay on the stack for now)
     TRAVdo(ARREXPR_EXPRS(node));
+    
+    // Then, push the size 'count' onto the stack
+    struct data_cgn *data = DATA_CGN_GET();
+    Constant con = {.type = TY_int, .cint = count};
+    int index = consttable_insert(data->constants, con);
+    emit("iloadc %d", index);
+    
+    // Allocate array
     emit("%cnewa", type_prefix(EXPR_TYPE(node)));
     return node;
 }
