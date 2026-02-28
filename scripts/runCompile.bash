@@ -10,15 +10,15 @@ if [[ "$(uname)" == "Darwin" ]]; then
     CIVAS="./test/compile/vm/macos/civas"
     CIVVM="./test/compile/vm/macos/civvm"
 else
-    CIVAS="./build/vm/linux/civas"
-    CIVVM="./build/vm/linux/civvm"
+    CIVAS="./test/compile/vm/linux/civas"
+    CIVVM="./test/compile/vm/linux/civvm"
 fi
 
 echo "Kompilieren..."
-make -C build  || exit 1
+make -C build-debug  || exit 1
 
 echo "Run civicc"
-./build/civicc $1 -o test/compile/out || exit 1
+./build-debug/civicc $1 -o test/compile/out || exit 1
 
 echo "Run civas"
 $CIVAS test/compile/out || exit 1
