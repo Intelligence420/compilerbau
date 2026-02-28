@@ -63,16 +63,24 @@ static Function *funtable_local_get_function(FunctionTable *table, char *name) {
 }
 
 Function *funtable_get_function(FunctionTable *table, char *name) {
-  Function *fun = funtable_local_get_function(table, name);
+  Function *fun = funtable_get_function_ptr(table, name);
   if (fun != NULL) {
     Function *new = MEMmalloc(sizeof(Function));
     *new = *fun;
     return new;
   }
+  return NULL;
+}
+
+Function *funtable_get_function_ptr(FunctionTable *table, char *name) {
+  Function *fun = funtable_local_get_function(table, name);
+  if (fun != NULL) {
+    return fun;
+  }
 
   if (table->parent == NULL) {
     return NULL;
   } else {
-    return funtable_get_function(table->parent, name);
+    return funtable_get_function_ptr(table->parent, name);
   }
 }

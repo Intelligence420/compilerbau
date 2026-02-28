@@ -1,0 +1,67 @@
+// Full code generation test covering all major features
+
+extern void printInt(int i);
+extern void printFloat(float f);
+extern void printBool(bool b);
+extern int scanInt();
+
+int g1 = 42;
+float g2 = 3.14;
+bool g3 = true;
+int[10] g_arr;
+
+void test_globals() {
+    printInt(g1);
+    printFloat(g2);
+    printBool(g3);
+}
+
+int factorial(int n) {
+    if (n <= 1) {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}
+
+void test_arrays() {
+    int[5] local_arr;
+    int i = 0;
+    while (i < 5) {
+        local_arr[i] = i * i;
+        i = i + 1;
+    }
+    
+    i = 0;
+    while (i < 5) {
+        printInt(local_arr[i]);
+        i = i + 1;
+    }
+}
+
+void test_nested(int x) {
+    int y = 10;
+    
+    void inner(int a) {
+        printInt(a + x + y);
+    }
+    
+    inner(5);
+}
+
+void test_logic(bool b1, bool b2) {
+    printBool(b1 && b2);
+    printBool(b1 || b2);
+    printBool(!b1);
+}
+
+void main() {
+    float f;
+    test_globals();
+    printInt(factorial(5));
+    test_arrays();
+    test_nested(7);
+    test_logic(true, false);
+    
+    f = (float)scanInt();
+    printFloat(f * 2.0);
+}

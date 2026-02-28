@@ -160,4 +160,15 @@ VarReferenz *return_varref_ignore_valid(VariableTable *table, char *name) {
 
   return NULL;
 }
+Variable *vartable_get_variable_ptr(VariableTable *table, char *name) {
+  Variable *var = vartable_local_get_variable_all(table, name);
+  if (var != NULL) {
+    return var;
+  }
 
+  if (table->parent == NULL) {
+    return NULL;
+  } else {
+    return vartable_get_variable_ptr(table->parent, name);
+  }
+}

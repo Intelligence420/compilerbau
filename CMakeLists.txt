@@ -54,6 +54,7 @@ add_executable(civicc ${FLEX_CivicLexer_OUTPUTS} ${BISON_CivicParser_OUTPUTS}
 
     # assemblycode
     src/assemblycode/constants.c
+    src/assemblycode/codegen.c
 )
 
 target_compile_options(civicc PRIVATE

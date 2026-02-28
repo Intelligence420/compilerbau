@@ -136,18 +136,22 @@ phase AssemblyCode {
             }
         };
 
-        /*
         traversal CodeGen {
             uid = CGN,
-            nodes = { },
+            nodes = { Program, FunDef, FunDec, GlobalDec, FunBody, VarDef,
+                      Assign, FunCallStmt, Ifstatement, Dostatement, Returnstatement,
+                      VarRef, Var, Binop, Monop, FunCall, TypeCast, ArrExpr,
+                      Num, Float, Bool },
             travdata {
                 user VariableTablePtr variables,
                 user FunctionTablePtr functions,
                 DeclarationType return_type,
-                user ConstantTablePtr constants
+                user ConstantTablePtr constants,
+                int label_counter,
+                int nesting_depth,
+                bool store_context
             }
         };
-        */
     }
 };
 

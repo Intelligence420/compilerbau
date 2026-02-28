@@ -1,0 +1,24 @@
+extern void printInt(int val);
+extern void printNewlines(int num);
+
+int factorial(int n) {
+    if (n <= 1) {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}
+
+int fib(int n) {
+    if (n <= 1) {
+        return n;
+    }
+    return fib(n - 1) + fib(n - 2);
+}
+
+export int main() {
+    printInt(factorial(5));
+    printNewlines(1);
+    printInt(fib(7));
+    printNewlines(1);
+    return 0;
+}

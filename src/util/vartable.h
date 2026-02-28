@@ -11,6 +11,8 @@ typedef struct Variable {
   bool isextern;
   bool valid;
   bool readonly;
+  int assembly_index; // For global (.global index) or imported (.importvar index)
+  int slot_index;     // Stack slot index for local variables/parameters
 } Variable;
 
 enum ReferenzLevel {
@@ -43,3 +45,4 @@ void vartable_free(VariableTable *table);
 bool vartable_contains(VariableTable *table, char *name);
 VarReferenz *return_varref(VariableTable *table, char *name);
 VarReferenz *return_varref_ignore_valid(VariableTable *table, char *name);
+Variable *vartable_get_variable_ptr(VariableTable *table, char *name);
