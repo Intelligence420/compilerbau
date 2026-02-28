@@ -1,6 +1,5 @@
 %{
 
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -39,7 +38,7 @@ void AddLocToNode(node_st *node, void *begin_loc, void *end_loc);
 
 %locations
 
-%token BRACKET_L BRACKET_R COMMA SEMICOLON CURLBRACKET_L CURLBRACKET_R SQUAREBRACKET_L SQUAREBRACKET_R
+%token BRACKET_L BRACKET_R COMMA SEMICOLON CURLBRACKET_L CURLBRACKET_R SQUAREBRACKET_L SQUAREBRACKET_R COLON DOT DOLLAR QUESTION HASH APOSTROPHE
 %token MINUS PLUS STAR SLASH PERCENT LE LT GE GT EQ NE OR AND NOT
 %token TRUEVAL FALSEVAL LET RETURNSTATEMENT
 %token IFSTATEMENT ELSESTATEMENT
@@ -392,11 +391,80 @@ void AddLocToNode(node_st *node, void *begin_loc, void *end_loc)
     NODE_ELINE(node) = loc_e->last_line;
     NODE_ECOL(node) = loc_e->last_column;
 }
+char* get_line_by_number(const char* filename, int target_line) {
+    // target_line ist 1-indiziert (entspricht der angezeigten Zeilennummer)
+    FILE* file = fopen(filename, "r");
+    if (!file) {
+        return NULL;
+    }
+
+    char* line = NULL;
+    size_t len = 0;
+    ssize_t read;
+    int current_line = 0;
+
+    while ((read = getline(&line, &len, file)) != -1) {
+      //printf("Read line %d: %s", current_line + 1, line); // Debug-Ausgabe
+        current_line++;
+        if (current_line == target_line) {
+            fclose(file);
+            // Abschliessendes Newline entfernen
+            if (read > 0 && line[read - 1] == '\n') {
+                line[read - 1] = '\0';
+            }
+            return line;
+        }
+    }
+
+    fclose(file);
+    if (line) free(line);
+    return NULL;
+}
+
+void append_char(char **str, char c) {
+    size_t len = (*str) ? strlen(*str) : 0;
+    
+    // Speicher um 2 Bytes erweitern: 1 für das Zeichen, 1 für '\0'
+    char *temp = realloc(*str, len + 2);
+    
+    if (temp == NULL) {
+        // Fehlerbehandlung: Speicher voll
+        return;
+    }
+
+    *str = temp;
+    (*str)[len] = c;      // Zeichen an die alte Endposition setzen
+    (*str)[len + 1] = '\0'; // String korrekt terminieren
+}
+
+char* get_syntax_line_by_underscore(const char* filename, int target_line) {
+    FILE* file = fopen(filename, "r");
+    if (!file) {
+        return NULL;
+    }
+
+    char *line = NULL;
+
+    for (int i = 0; i < target_line - 1; i++) {
+        append_char(&line, '_'); // Leerzeichen für alle Zeilen vor der Zielzeile
+    }
+    append_char(&line, '^'); // Markierung für die Zielzeile
+    fclose(file);
+    return line; // Achtung: Der Aufrufer muss free() benutzen!
+}
 
 int yyerror(char *error)
 {
+  char *line = get_line_by_number(global.input_file, global.line + 1);
+  char *syntax_line = get_syntax_line_by_underscore(global.input_file, global.col);
+
   CTI(CTI_ERROR, true, "line %d, col %d\nError parsing source code: %s\n",
-            global.line, global.col, error);
+            global.line+1, global.col, error);
+  if (line != NULL && syntax_line != NULL) {
+    printf("%s\n%s\n", line, syntax_line);
+    free(line);
+    free(syntax_line);
+  }
   CTIabortOnError();
   return 0;
 }
