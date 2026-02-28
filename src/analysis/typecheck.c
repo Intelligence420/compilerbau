@@ -318,6 +318,32 @@ node_st *TYCvardef(node_st *node) {
         CTI(CTI_ERROR, true,
             "cannot initialize array with incompatible expression");
       }
+      /* Check that the number of elements in the array literal matches
+       * the declared first dimension size. */
+      if (NODE_TYPE(expr) == NT_ARREXPR) {
+        /* Count elements in the arrexpr */
+        int elem_count = 0;
+        node_st *elem = ARREXPR_EXPRS(expr);
+        while (elem != NULL) {
+          elem_count++;
+          elem = EXPRS_NEXT(elem);
+        }
+        /* Get declared first-dimension size from VARDEF_EXPRS */
+        node_st *dim_exprs = VARDEF_EXPRS(node);
+        if (dim_exprs != NULL) {
+          node_st *size_expr = EXPRS_EXPR(dim_exprs);
+          /* Only check if the size is a compile-time integer constant */
+          if (NODE_TYPE(size_expr) == NT_NUM) {
+            int declared_size = NUM_VAL(size_expr);
+            if (elem_count != declared_size) {
+              CTI(CTI_ERROR, true,
+                  "Array initializer has %d element(s), but array was declared "
+                  "with size %d.",
+                  elem_count, declared_size);
+            }
+          }
+        }
+      }
     }
   }
 

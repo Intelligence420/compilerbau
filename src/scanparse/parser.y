@@ -40,6 +40,7 @@ extern void lexer_init_first_line(const char *line);
 }
 
 %locations
+%define parse.error verbose
 
 %token BRACKET_L BRACKET_R COMMA SEMICOLON CURLBRACKET_L CURLBRACKET_R SQUAREBRACKET_L SQUAREBRACKET_R
 %token MINUS PLUS STAR SLASH PERCENT LE LT GE GT EQ NE OR AND NOT
