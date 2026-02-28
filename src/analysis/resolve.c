@@ -104,13 +104,13 @@ node_st *RSOglobaldec(node_st *node) {
   node_st *ids = GLOBALDEC_IDS(node);
   while (ids != NULL) {
     char *id_name = IDS_ID(ids);
-    Variable var = {.name = STRcpy(id_name), .type = type};
+    Variable var = {.name = STRcpy(id_name), .type = TY_int, .dim = 0, .isextern = true};
     vartable_insert(data->variables, var);
     ids = IDS_NEXT(ids);
     dim++;
   }
 
-  Variable var = {.name = STRcpy(name), .type = type, .dim = dim};
+  Variable var = {.name = STRcpy(name), .type = type, .dim = dim, .isextern = true};
   vartable_insert(data->variables, var);
 
   return node;

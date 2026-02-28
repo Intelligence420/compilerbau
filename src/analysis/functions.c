@@ -21,7 +21,7 @@
 void FNSinit(void) {}
 void FNSfini(void) {}
 
-static Function from_header(node_st *node, bool isextern) {
+static Function from_header(node_st *node, void *fundef_node, bool isextern) {
   const char *func_name = FUNHEADER_NAME(node);
   enum DeclarationType type = FUNHEADER_TYPE(node);
 
@@ -54,7 +54,7 @@ static Function from_header(node_st *node, bool isextern) {
   Parameters params = {.arity = arity, .list = list};
 
   Function fun = {
-      .name = STRcpy(func_name), .return_type = type, .params = params};
+      .name = STRcpy(func_name), .return_type = type, .params = params, .isextern = isextern, .fundef_node = fundef_node};
   return fun;
 }
 
@@ -72,7 +72,7 @@ node_st *FNSfundef(node_st *node) {
   struct data_fns *data = DATA_FNS_GET();
 
   node_st *header = FUNDEF_HEADER(node);
-  Function fun = from_header(header, false);
+  Function fun = from_header(header, node, false);
   funtable_insert(data->functions, fun);
 
   FunctionTable *functions = create_funtable(data->functions);
@@ -93,7 +93,7 @@ node_st *FNSfundec(node_st *node) {
   struct data_fns *data = DATA_FNS_GET();
 
   node_st *header = FUNDEC_HEADER(node);
-  Function fun = from_header(header, false);
+  Function fun = from_header(header, node, true);
   funtable_insert(data->functions, fun);
 
   return node;
