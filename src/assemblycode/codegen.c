@@ -330,6 +330,9 @@ node_st *CGNfundef(node_st *node) {
     data->return_type = FUNHEADER_TYPE(header);
     data->nesting_depth++;
 
+    // Count param slots
+    data->param_slots = count_flat_params(FUNHEADER_PARAMS(header));
+
     // Alle lokalen Variablen und Parameter-Slots berechnen
     int current_slot = 0;
     for (int i = 0; i < data->variables->size; i++) {
@@ -337,6 +340,7 @@ node_st *CGNfundef(node_st *node) {
         v->slot_index = current_slot;
         current_slot += (1 + v->dim);
     }
+    data->total_slots = current_slot;
 
     // Label für die Funktion ausgeben
     fprintf(outfile, "\n"); // Leerzeile vor Funktionen zur besseren Lesbarkeit
@@ -391,18 +395,9 @@ node_st *CGNglobaldec(node_st *node) {
   WICHTIG: L bei esr ist die Anzahl der ZUSÄTZLICHEN lokalen Variablen,
   NICHT inklusive der Parameter (die sind bereits im Activation Record). */
 node_st *CGNfunbody(node_st *node) {
-    int local_slots = 0;
-    node_st *vardefs_list = FUNBODY_DECL(node);
-    while (vardefs_list != NULL) {
-        node_st *vardef = VARDEFS_DEC(vardefs_list);
-        local_slots++; // The reference itself
-        node_st *dim_exprs = VARDEF_EXPRS(vardef);
-        while (dim_exprs != NULL) {
-            local_slots++; // One slot per dimension
-            dim_exprs = EXPRS_NEXT(dim_exprs);
-        }
-        vardefs_list = VARDEFS_NEXT(vardefs_list);
-    }
+    struct data_cgn *data = DATA_CGN_GET();
+    int local_slots = data->total_slots - data->param_slots;
+    if (local_slots < 0) local_slots = 0;
 
     // esr ausgeben
     emit("esr %d", local_slots);
