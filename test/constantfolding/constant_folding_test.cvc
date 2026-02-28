@@ -1,0 +1,12 @@
+export int main() {
+    int x1 = 1 + 2 * 3;     // 7
+    int x2 = (1 + 2) * 3;   // 9
+    float f1 = 1.0 + 2.5;   // 3.5
+    float f2 = 10.0 / 4.0;  // 2.5
+    bool b1 = (1 < 2) && (3 == 3); // true
+    bool b2 = !b1 || (5.0 >= 10.0); // false
+    int c1 = (int)5.5;      // 5
+    float c2 = (float)10;   // 10.0
+    return x1 + x2 + c1;
+}
+

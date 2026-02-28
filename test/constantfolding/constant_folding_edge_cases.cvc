@@ -1,0 +1,91 @@
+export int main() {
+    // --- Integer Arithmetic ---
+    int i1 = 100 + 200 - 50 * 2 / 10; // 100 + 200 - 10 = 290
+    int i2 = 10 % 3; // 1
+    int i3 = 10 % -3; // Implementation defined, usually 1
+    int i4 = -10 % 3; // Implementation defined, usually -1
+    int i5 = -10 % -3; // Implementation defined, usually -1
+    
+    // --- Floating Point Arithmetic ---
+    float f1 = 1.234 + 5.678;
+    float f2 = 10.0 / 3.0;
+    float f3 = 0.0 * 123.456;
+    float f4 = -0.0 + 0.0;
+    float f5 = 1.0 - 2.0;
+    
+    // --- Boolean Logic ---
+    bool b1 = true && false; // false
+    bool b2 = true || false; // true
+    bool b3 = !true; // false
+    bool b4 = !false; // true
+    bool b5 = true == true; // true
+    bool b6 = true != false; // true
+    
+    // --- Comparisons ---
+    bool c1 = 1 < 2; // true
+    bool c2 = 1.0 < 2.0; // true
+    bool c3 = 2 <= 2; // true
+    bool c4 = 2.1 <= 2.1; // true
+    bool c5 = 3 > 2; // true
+    bool c6 = 3.3 > 2.2; // true
+    bool c7 = 4 >= 4; // true
+    bool c8 = 4.4 >= 4.4; // true
+    bool c9 = 5 == 5; // true
+    bool c10 = 5.5 == 5.5; // true
+    bool c11 = 6 != 7; // true
+    bool c12 = 6.6 != 7.7; // true
+    
+    // --- Edge Cases / Special Cases ---
+    // Division by zero (should NOT fold to avoid compiler crash, but keep as is)
+    // int div0 = 1 / 0; 
+    // float fdiv0 = 1.0 / 0.0;
+    // int mod0 = 1 % 0;
+
+    // Nested Mixed Expressions
+    float complex1 = (float)((1 + 2) * 3) / 2.0 + 1.5; // (9 / 2.0) + 1.5 = 4.5 + 1.5 = 6.0
+    
+    // Casting
+    int cast1 = (int) true; // 1
+    int cast2 = (int) false; // 0
+    int cast3 = (int) 1.99; // 1
+    int cast4 = (int) -1.99; // -1
+    
+    float cast5 = (float) 123; // 123.0
+    float cast6 = (float) true; // 1.0
+    float cast7 = (float) false; // 0.0
+    
+    bool cast8 = (bool) 1; // true
+    bool cast9 = (bool) 0; // false
+    bool cast10 = (bool) -1; // true
+    bool cast11 = (bool) 0.5; // true
+    bool cast12 = (bool) 0.0; // false
+
+    // --- More Edge Cases ---
+    
+    // Nested Unary and Casts
+    bool complex_b = !((bool)(1 - 1)) == !!(bool)0.5; // !(false) == true -> true == true -> true
+    
+    // Float precision
+    bool prec1 = 1.0000001 > 1.0; // true
+    bool prec2 = 0.0000000 == -0.0000000; // true
+    
+    // Extreme values (assuming 32-bit ints)
+    int max_int = 2147483647;
+    int min_int = -2147483647 - 1;
+    bool check_max = (2147483647 + 1) < 0; // Overflow behavior is usually wrapping, but let's see. 
+                                        // Note: in C it's UB, but our compiler just does it.
+
+    // Redundant casts
+    int red1 = (int)(int)(int)5; // 5
+    float red2 = (float)(float)1.5; // 1.5
+    
+    // Type conversion chains
+    int chain1 = (int)(float)(bool)100; // (int)(float)true -> (int)1.0 -> 1
+
+    // Comparisons of different types (should have been handled by typechecker/casts)
+    // In civic, typecheck.c says: if (left_type != right_type) CTI_ERROR
+    // So we can only compare same types. We already tested those.
+
+    return 0;
+}
+
