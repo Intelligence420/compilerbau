@@ -49,3 +49,4 @@ build*/
 
 .idea
 /test/compile/out
+.DS_Store
