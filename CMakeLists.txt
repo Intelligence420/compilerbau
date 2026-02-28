@@ -52,6 +52,9 @@ add_executable(civicc ${FLEX_CivicLexer_OUTPUTS} ${BISON_CivicParser_OUTPUTS}
     src/util/funtable.c src/util/memfree.c
     src/util/vartable.c 
     src/util/consttable.c
+
+    #assembly
+    src/assembly/codegen.c
 )
 
 target_compile_options(civicc PRIVATE

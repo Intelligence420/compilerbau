@@ -19,3 +19,19 @@ static char *TYstr(enum DeclarationType ty) {
     return NULL;
   }
 }
+
+static const char *TYinst(enum DeclarationType ty) {
+    switch (ty) {
+        case TY_int:
+            return "i";
+        case TY_float:
+            return "f";
+        case TY_bool:
+            return "b";
+        case TY_void:
+            return "";
+        default:
+            DBUG_ASSERT(false, "unknown type detected!");
+            return NULL;
+    }
+}
