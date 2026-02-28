@@ -1,0 +1,22 @@
+main:
+    esr 5
+    istore 2
+    istore 3
+    istore 3
+    istore 3
+    istore 3
+    istore 5
+    istore 5
+    istore 3
+    istore 3
+    istore 3
+    istore 3
+    istore 3
+    istore 5
+    istore 5
+    istore 3
+    istore 5
+    istore 5
+    istore 5
+    ireturn
+
