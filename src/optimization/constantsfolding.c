@@ -8,21 +8,232 @@
 #include "util/vartable.h"
 #include "user_types.h"
 
+/**
+ * Constant Folding Breakdown:
+ * 
+ * Done:
+ * - Basic integer arithmetic (+, -, *, /, %) on constant Num nodes.
+ * - Basic float arithmetic (+, -, *, /) on constant Float nodes.
+ * - Boolean logical operations (&&, ||) on constant Bool nodes.
+ * - Comparison operations (==, !=, <, <=, >, >=) for int, float, and bool.
+ * - Unary operations: arithmetic negation (-) for int/float, logical not (!) for bool.
+ * - Type casts between int, float, and bool constants.
+ * 
+ * TODO:
+ * - Identity optimizations (e.g., x + 0 -> x, x * 1 -> x, x * 0 -> 0).
+ * - Constant propagation (requires tracking variable values).
+ * - Dead branch elimination (e.g., if (true) { ... } else { ... } -> { ... }).
+ * - Folding for array expressions if all elements are constants.
+ * - Handle potential overflow/underflow warnings.
+ */
+
 void CFinit(void) {}
 void CFfini(void) {}
 
 node_st *CFbinop(node_st *node) {
     TRAVchildren(node);
+
+    node_st *left = BINOP_LEFT(node);
+    node_st *right = BINOP_RIGHT(node);
+
+    if (NODE_TYPE(left) == NT_NUM && NODE_TYPE(right) == NT_NUM) {
+        int lval = NUM_VAL(left);
+        int rval = NUM_VAL(right);
+        int res = 0;
+        bool res_bool = false;
+        bool is_bool = false;
+        bool foldable = true;
+
+        switch (BINOP_OP(node)) {
+        case BO_add: res = lval + rval; break;
+        case BO_sub: res = lval - rval; break;
+        case BO_mul: res = lval * rval; break;
+        case BO_div: 
+            if (rval == 0) foldable = false;
+            else res = lval / rval; 
+            break;
+        case BO_mod:
+            if (rval == 0) foldable = false;
+            else res = lval % rval;
+            break;
+        case BO_lt: res_bool = (lval < rval); is_bool = true; break;
+        case BO_le: res_bool = (lval <= rval); is_bool = true; break;
+        case BO_gt: res_bool = (lval > rval); is_bool = true; break;
+        case BO_ge: res_bool = (lval >= rval); is_bool = true; break;
+        case BO_eq: res_bool = (lval == rval); is_bool = true; break;
+        case BO_ne: res_bool = (lval != rval); is_bool = true; break;
+        default: foldable = false; break;
+        }
+
+        if (foldable) {
+            node_st *res_node;
+            if (is_bool) {
+                res_node = ASTbool(res_bool);
+                EXPR_TYPE(res_node) = TY_bool;
+            } else {
+                res_node = ASTnum(res);
+                EXPR_TYPE(res_node) = TY_int;
+            }
+            CCNfree(node);
+            return res_node;
+        }
+    } else if (NODE_TYPE(left) == NT_FLOAT && NODE_TYPE(right) == NT_FLOAT) {
+        float lval = FLOAT_VAL(left);
+        float rval = FLOAT_VAL(right);
+        float res = 0.0;
+        bool res_bool = false;
+        bool is_bool = false;
+        bool foldable = true;
+
+        switch (BINOP_OP(node)) {
+        case BO_add: res = lval + rval; break;
+        case BO_sub: res = lval - rval; break;
+        case BO_mul: res = lval * rval; break;
+        case BO_div: 
+            if (rval == 0.0) foldable = false;
+            else res = lval / rval; 
+            break;
+        case BO_lt: res_bool = (lval < rval); is_bool = true; break;
+        case BO_le: res_bool = (lval <= rval); is_bool = true; break;
+        case BO_gt: res_bool = (lval > rval); is_bool = true; break;
+        case BO_ge: res_bool = (lval >= rval); is_bool = true; break;
+        case BO_eq: res_bool = (lval == rval); is_bool = true; break;
+        case BO_ne: res_bool = (lval != rval); is_bool = true; break;
+        default: foldable = false; break;
+        }
+
+        if (foldable) {
+            node_st *res_node;
+            if (is_bool) {
+                res_node = ASTbool(res_bool);
+                EXPR_TYPE(res_node) = TY_bool;
+            } else {
+                res_node = ASTfloat(res);
+                EXPR_TYPE(res_node) = TY_float;
+            }
+            CCNfree(node);
+            return res_node;
+        }
+    } else if (NODE_TYPE(left) == NT_BOOL && NODE_TYPE(right) == NT_BOOL) {
+        bool lval = BOOL_VAL(left);
+        bool rval = BOOL_VAL(right);
+        bool res = false;
+        bool foldable = true;
+
+        switch (BINOP_OP(node)) {
+        case BO_and: 
+        case BO_mul: res = lval && rval; break;
+        case BO_or:
+        case BO_add: res = lval || rval; break;
+        case BO_eq: res = lval == rval; break;
+        case BO_ne: res = lval != rval; break;
+        default: foldable = false; break;
+        }
+
+
+        if (foldable) {
+            node_st *res_node = ASTbool(res);
+            EXPR_TYPE(res_node) = TY_bool;
+            CCNfree(node);
+            return res_node;
+        }
+    }
+
     return node; 
 }
 
 node_st *CFmonop(node_st *node) {
     TRAVchildren(node);
+    node_st *expr = MONOP_EXPR(node);
+
+    if (NODE_TYPE(expr) == NT_NUM) {
+        if (MONOP_OP(node) == MO_neg) {
+            node_st *res = ASTnum(-NUM_VAL(expr));
+            EXPR_TYPE(res) = TY_int;
+            CCNfree(node);
+            return res;
+        }
+    } else if (NODE_TYPE(expr) == NT_FLOAT) {
+        if (MONOP_OP(node) == MO_neg) {
+            node_st *res = ASTfloat(-FLOAT_VAL(expr));
+            EXPR_TYPE(res) = TY_float;
+            CCNfree(node);
+            return res;
+        }
+    } else if (NODE_TYPE(expr) == NT_BOOL) {
+        if (MONOP_OP(node) == MO_not) {
+            node_st *res = ASTbool(!BOOL_VAL(expr));
+            EXPR_TYPE(res) = TY_bool;
+            CCNfree(node);
+            return res;
+        }
+    }
+
     return node;
 }
 
 node_st *CFtypecast(node_st *node) {
     TRAVchildren(node);
+    node_st *expr = TYPECAST_EXPR(node);
+    enum DeclarationType target_type = TYPECAST_TYPE(node);
+
+    if (NODE_TYPE(expr) == NT_NUM) {
+        int val = NUM_VAL(expr);
+        if (target_type == TY_float) {
+            node_st *res = ASTfloat((float)val);
+            EXPR_TYPE(res) = TY_float;
+            CCNfree(node);
+            return res;
+        } else if (target_type == TY_bool) {
+            node_st *res = ASTbool(val != 0);
+            EXPR_TYPE(res) = TY_bool;
+            CCNfree(node);
+            return res;
+        } else if (target_type == TY_int) {
+            // redundant cast, but let's handle it
+            node_st *res = ASTnum(val);
+            EXPR_TYPE(res) = TY_int;
+            CCNfree(node);
+            return res;
+        }
+    } else if (NODE_TYPE(expr) == NT_FLOAT) {
+        float val = FLOAT_VAL(expr);
+        if (target_type == TY_int) {
+            node_st *res = ASTnum((int)val);
+            EXPR_TYPE(res) = TY_int;
+            CCNfree(node);
+            return res;
+        } else if (target_type == TY_bool) {
+            node_st *res = ASTbool(val != 0.0);
+            EXPR_TYPE(res) = TY_bool;
+            CCNfree(node);
+            return res;
+        } else if (target_type == TY_float) {
+            node_st *res = ASTfloat(val);
+            EXPR_TYPE(res) = TY_float;
+            CCNfree(node);
+            return res;
+        }
+    } else if (NODE_TYPE(expr) == NT_BOOL) {
+        bool val = BOOL_VAL(expr);
+        if (target_type == TY_int) {
+            node_st *res = ASTnum(val ? 1 : 0);
+            EXPR_TYPE(res) = TY_int;
+            CCNfree(node);
+            return res;
+        } else if (target_type == TY_float) {
+            node_st *res = ASTfloat(val ? 1.0 : 0.0);
+            EXPR_TYPE(res) = TY_float;
+            CCNfree(node);
+            return res;
+        } else if (target_type == TY_bool) {
+            node_st *res = ASTbool(val);
+            EXPR_TYPE(res) = TY_bool;
+            CCNfree(node);
+            return res;
+        }
+    }
+
     return node;
 }
 
