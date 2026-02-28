@@ -6,8 +6,8 @@ start phase RootPhase {
         Analysis;
         Adjustment;
         Optimization;
-        Print;
-        //AssemblyCode;
+        //Print;
+        CodeGen;
         MemFree;
     }
 };
@@ -140,24 +140,29 @@ phase Optimization {
     }
 };
 
-/*
-phase AssemblyCode {
-    info = "Generates assembly code from the AST",
-
-    actions {
-        traversal CodeGen {
-            uid = CGN,
-            nodes = { },
-            travdata {
-                user VariableTablePtr variables,
-                user FunctionTablePtr functions,
-                DeclarationType return_type,
-                user ConstantTablePtr constants
-            }
-        };
+traversal CodeGen {
+    uid = CGN,
+    nodes = {Program, GlobalDec, FunDef, VarDef, Assign, FunCall, VarRef, BinOp, Num, Float, Bool },
+    travdata {
+        user file file,
+        user VariableTablePtr variables,
+        user FunctionTablePtr functions,
+            DeclarationType return_type,
+        user ConstantTablePtr constants,
+        string export,
+        string import,
+        string global
     }
 };
-*/
+
+// phase AssemblyCode {
+//     info = "Generates assembly code from the AST",
+
+//     actions {
+        
+//     }
+// };
+
 
 traversal MemFree {
     uid = FREE,
@@ -290,7 +295,7 @@ node Block {
 
 node Assign {
     children {
-        Var let { constructor },
+        Var var { constructor },
         Expr expr { constructor, mandatory }
     }
 };

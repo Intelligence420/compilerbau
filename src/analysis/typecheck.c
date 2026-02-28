@@ -328,7 +328,7 @@ node_st *TYCassign(node_st *node) {
   TRAVchildren(node);
 
   node_st *expr = ASSIGN_EXPR(node);
-  node_st *var = ASSIGN_LET(node);
+  node_st *var = ASSIGN_VAR(node);
   VariablePtr var_ptr = VAR_VARPTR(var);
 
   if (var_ptr->readonly) {

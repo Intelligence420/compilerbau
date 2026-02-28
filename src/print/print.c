@@ -53,8 +53,8 @@ node_st *PRTstmts(node_st *node) {
 node_st *PRTassign(node_st *node) {
 
   print_indent();
-  if (ASSIGN_LET(node) != NULL) {
-    TRAVlet(node);
+  if (ASSIGN_VAR(node) != NULL) {
+    TRAVvar(node);
     printf(" = ");
   }
 

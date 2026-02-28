@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 CIVAS=${CIVAS-../bin/civas}
 CIVVM=${CIVVM-../bin/civvm}
 CIVCC=${CIVCC-../bin/civcc}
