@@ -250,7 +250,7 @@ node_st *FTWforstatement(node_st *node) {
   node_st *res = NULL;
 
   if (is_constant(step)) {
-    enum BinOpType op = is_negative(step) ? BO_ge : BO_le;
+    enum BinOpType op = is_negative(step) ? BO_gt : BO_lt;
     
     node_st *var_lhs_cond = ASTvar(NULL, STRcpy(var_name));
     VAR_VARPTR(var_lhs_cond) = return_varref_ignore_valid(data->variables, var_name);
@@ -273,7 +273,7 @@ node_st *FTWforstatement(node_st *node) {
     EXPR_TYPE(var_ref_c1) = TY_int;
     
     node_st *until_copy1 = copy_and_fix(until, data);
-    node_st *cond_pos = ASTbinop(var_ref_c1, until_copy1, BO_le);
+    node_st *cond_pos = ASTbinop(var_ref_c1, until_copy1, BO_lt);
     EXPR_TYPE(cond_pos) = TY_bool;
 
     node_st *var_lhs_c2 = ASTvar(NULL, STRcpy(var_name));
@@ -283,7 +283,7 @@ node_st *FTWforstatement(node_st *node) {
     EXPR_TYPE(var_ref_c2) = TY_int;
 
     node_st *until_copy2 = copy_and_fix(until, data);
-    node_st *cond_neg = ASTbinop(var_ref_c2, until_copy2, BO_ge);
+    node_st *cond_neg = ASTbinop(var_ref_c2, until_copy2, BO_gt);
     EXPR_TYPE(cond_neg) = TY_bool;
 
     node_st *step_copy1 = copy_and_fix(step, data);
