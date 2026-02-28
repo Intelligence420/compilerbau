@@ -1,0 +1,17 @@
+// Test edge cases: empty bodies, multiple functions, shadowing
+int g = 10;
+
+void empty_body_init() {
+    int x = 20;
+}
+
+int shadowing_test() {
+    int g = 50; 
+    return g;
+}
+
+export int main() {
+    int result = shadowing_test();
+    empty_body_init();
+    return result + g;
+}

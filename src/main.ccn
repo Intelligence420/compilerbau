@@ -89,6 +89,14 @@ phase Adjustment {
             nodes = { Program, FunDef }
         };
 
+        traversal DeclarationSplitting {
+            uid = DS,
+            nodes = { Program, FunDef, FunBody },
+            travdata {
+                user VariableTablePtr variables
+            }
+        };
+
 /*
         traversal ArrayFlatten {
             uid = AFL,

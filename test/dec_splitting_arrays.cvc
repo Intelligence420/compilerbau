@@ -1,0 +1,16 @@
+// Test array initialization and mixed globals/locals
+int[3] arr = [1, 2, 3];
+int no_init;
+export float z = 1.5;
+
+export int main() {
+    int[2] b = [10, 20];
+    int k;
+    int m = 5;
+    k = m;
+    return arr[0] + b[1] + k + (int)z;
+}
+
+void foo() {
+    int[1] single = [99];
+}
