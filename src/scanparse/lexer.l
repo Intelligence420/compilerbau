@@ -66,12 +66,6 @@ exponent [eE][+-]?[0-9]+
 ";"                        { FILTER( SEMICOLON); }
 "["                        { FILTER( SQUAREBRACKET_L); }
 "]"                        { FILTER( SQUAREBRACKET_R); }
-":"                         { FILTER( COLON); }
-"."                        { FILTER( DOT); }
-"$"                        { FILTER( DOLLAR); }
-"?"                        { FILTER( QUESTION); }
-"#"                        { FILTER( HASH); }
-"'"                       { FILTER( APOSTROPHE); }
 
 "-"                        { FILTER( MINUS); }
 "+"                        { FILTER( PLUS);  }

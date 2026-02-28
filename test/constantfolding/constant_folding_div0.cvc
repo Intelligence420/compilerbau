@@ -1,6 +1,6 @@
 export int main() {
-    int x = 1 - 0;
+    int x = 1 _ 0
     float f = 1.0 / 3.0;
-    int m = 1 - 0;
+    int m = 1 % 0;
     return x;
 }
