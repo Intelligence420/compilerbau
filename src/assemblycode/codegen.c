@@ -185,6 +185,7 @@ node_st *CGNprogram(node_st *node) {
     data->label_counter = 0;
     data->nesting_depth = 0;
     data->store_context = false;
+    data->arrexpr_slot_offset = 0;
 
     // Erster Durchlauf - Import/Global-Indizes vergeben
     node_st *decls_ptr = PROGRAM_DECLS(node);
@@ -322,6 +323,7 @@ node_st *CGNfundef(node_st *node) {
     node_st *header = FUNDEF_HEADER(node);
     data->return_type = FUNHEADER_TYPE(header);
     data->nesting_depth++;
+    data->arrexpr_slot_offset = 0;
 
     // Count param slots
     data->param_slots = count_flat_params(FUNHEADER_PARAMS(header));
@@ -334,6 +336,7 @@ node_st *CGNfundef(node_st *node) {
         current_slot += (1 + v->dim);
     }
     data->total_slots = current_slot;
+    data->total_slots += 20; // Reserve 20 slots for temp array literal refs
 
     // Label für die Funktion ausgeben
     fprintf(outfile, "\n"); // Leerzeile vor Funktionen zur besseren Lesbarkeit
@@ -654,23 +657,50 @@ node_st *CGNtypecast(node_st *node) {
 }
 
 node_st *CGNarrexpr(node_st *node) {
+    struct data_cgn *data = DATA_CGN_GET();
     int count = 0;
-    node_st *exprs = ARREXPR_EXPRS(node);
-    while (exprs != NULL) {
+    node_st *exprs_ptr = ARREXPR_EXPRS(node);
+    while (exprs_ptr != NULL) {
         count++;
-        exprs = EXPRS_NEXT(exprs);
+        exprs_ptr = EXPRS_NEXT(exprs_ptr);
     }
     
-    // First, push elements (they will stay on the stack for now)
-    TRAVdo(ARREXPR_EXPRS(node));
-    
-    // Then, push the size 'count' onto the stack
-    struct data_cgn *data = DATA_CGN_GET();
-    Constant con = {.type = TY_int, .cint = count};
-    int index = consttable_insert(data->constants, con);
-    emit("iloadc %d", index);
-    
     // Allocate array
-    emit("%cnewa", type_prefix(EXPR_TYPE(node)));
+    Constant con = {.type = TY_int, .cint = count};
+    int size_idx = consttable_insert(data->constants, con);
+    emit("iloadc %d", size_idx);
+    
+    char prefix = type_prefix(EXPR_TYPE(node));
+    emit("%cnewa", prefix);
+    
+    // Use a temp slot for initialization
+    int temp_slot = data->total_slots - 20 + data->arrexpr_slot_offset;
+    data->arrexpr_slot_offset++;
+    
+    emit("astore %d", temp_slot);
+    
+    // Initialize elements
+    exprs_ptr = ARREXPR_EXPRS(node);
+    for (int i = 0; i < count; i++) {
+        node_st *expr = EXPRS_EXPR(exprs_ptr);
+        
+        // Target order for storea: RHS (value), Index, Reference
+        TRAVdo(expr); // Value
+        
+        Constant icon = {.type = TY_int, .cint = i};
+        int idx_idx = consttable_insert(data->constants, icon);
+        emit("iloadc %d", idx_idx); // Index
+        
+        emit("aload %d", temp_slot); // Reference
+        
+        emit("%cstorea", prefix);
+        
+        exprs_ptr = EXPRS_NEXT(exprs_ptr);
+    }
+    
+    // Leave reference on stack
+    emit("aload %d", temp_slot);
+    
+    data->arrexpr_slot_offset--;
     return node;
 }

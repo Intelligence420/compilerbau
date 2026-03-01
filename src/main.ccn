@@ -157,7 +157,8 @@ phase AssemblyCode {
                 int nesting_depth,
                 bool store_context,
                 int total_slots,
-                int param_slots
+                int param_slots,
+                int arrexpr_slot_offset
             }
         };
     }

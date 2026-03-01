@@ -10,7 +10,7 @@ export int main() {
     for (int i = 1, 10) {
         sum = sum + i;
     }
-    printInt(sum); // (10*11)/2 = 55
+    printInt(sum); // (9*10)/2 = 45 (1 to 9)
     printNewlines(1);
     
     // Loop with explicit step
@@ -18,7 +18,7 @@ export int main() {
     for (int i = 0, 10, 2) {
         sum = sum + i;
     }
-    printInt(sum); // 0+2+4+6+8+10 = 30
+    printInt(sum); // 0+2+4+6+8 = 20
     printNewlines(1);
     
     // Reverse loop
@@ -26,7 +26,7 @@ export int main() {
     for (int i = 10, 1, -2) {
         sum = sum + i;
     }
-    printInt(sum); // 10+8+6+4+2 = 30
+    printInt(sum); // 10+8+6+4+2 = 30 (10 down to 2)
     printNewlines(1);
     
     // Dynamic step
@@ -34,7 +34,7 @@ export int main() {
     for (int i = 1, 10, s1) {
         sum = sum + i;
     }
-    printInt(sum); // 1 + 4 + 7 + 10 = 22
+    printInt(sum); // 1 + 4 + 7 = 12
     printNewlines(1);
     
     // Dynamic step (negative)
@@ -42,7 +42,7 @@ export int main() {
     for (int i = 10, 1, s2) {
         sum = sum + i;
     }
-    printInt(sum); // 10 + 7 + 4 + 1 = 22
+    printInt(sum); // 10 + 7 + 4 = 21
     printNewlines(1);
     
     return 0;
