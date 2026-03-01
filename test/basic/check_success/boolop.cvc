@@ -12,9 +12,9 @@ void f()
   bool h = true * false;
 
   int i = 4/3;
-  int j = 6/0;
+  int j = 6/2;
   float k = 5.0/2.0;
-  float l = 9.0/0.00;
+  float l = 9.0/3.0;
 
   int m = 12 % 8 % 3;
 

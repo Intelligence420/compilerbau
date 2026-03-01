@@ -13,4 +13,7 @@ void GLBinitializeGlobals()
     global.line = 0;
     global.input_file = NULL;
     global.output_file = NULL;
+    global.skip_optimization = false;
+    global.skip_codegen = false;
+    global.print_debug = false;
 }

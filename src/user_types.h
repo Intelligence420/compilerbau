@@ -13,5 +13,6 @@ typedef Function* FunctionPtr;
 typedef VariableTable* VariableTablePtr;
 typedef VarReferenz* VariablePtr;
 typedef ConstantTable* ConstantTablePtr;
+typedef struct ccn_node *NodePtr;
 
 // Add more types here if necessary

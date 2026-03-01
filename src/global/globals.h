@@ -9,6 +9,9 @@ struct globals {
     int verbose;
     char *input_file;
     char *output_file;
+    bool skip_optimization;
+    bool skip_codegen;
+    bool print_debug;
 };
 
 extern struct globals global;

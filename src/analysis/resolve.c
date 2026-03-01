@@ -8,6 +8,7 @@
 #include "util/funtable.h"
 #include "util/vartable.h"
 #include <stdbool.h>
+#include <stdio.h>
 
 void RSOinit(void) {}
 void RSOfini(void) {}
@@ -88,6 +89,14 @@ node_st *RSOvardef(node_st *node) {
   Variable var = {.name = STRcpy(name), .type = type, .dim = dim};
   vartable_insert(data->variables, var);
 
+  // Reserve slots for dimensions
+  for (int i = 0; i < dim; i++) {
+    char buf[128];
+    snprintf(buf, sizeof(buf), "__%s_dim_%d", name, i);
+    Variable vdim = {.name = STRcpy(buf), .type = TY_int, .dim = 0};
+    vartable_insert(data->variables, vdim);
+  }
+
   return node;
 }
 
@@ -100,18 +109,23 @@ node_st *RSOglobaldec(node_st *node) {
   struct data_rso *data = DATA_RSO_GET();
 
   int dim = 0;
-  // allen IDs in Liste einfügen und den Parameter-Typ vom äußeren Typ ableiten
   node_st *ids = GLOBALDEC_IDS(node);
   while (ids != NULL) {
-    char *id_name = IDS_ID(ids);
-    Variable var = {.name = STRcpy(id_name), .type = TY_int, .dim = 0, .isextern = true};
-    vartable_insert(data->variables, var);
-    ids = IDS_NEXT(ids);
     dim++;
+    ids = IDS_NEXT(ids);
   }
 
   Variable var = {.name = STRcpy(name), .type = type, .dim = dim, .isextern = true};
   vartable_insert(data->variables, var);
+
+  // allen IDs in Liste einfügen und den Parameter-Typ vom äußeren Typ ableiten
+  ids = GLOBALDEC_IDS(node);
+  while (ids != NULL) {
+    char *id_name = IDS_ID(ids);
+    Variable var_dim = {.name = STRcpy(id_name), .type = TY_int, .dim = 0, .isextern = true};
+    vartable_insert(data->variables, var_dim);
+    ids = IDS_NEXT(ids);
+  }
 
   return node;
 }
@@ -158,19 +172,26 @@ node_st *RSOparam(node_st *node) {
 
   struct data_rso *data = DATA_RSO_GET();
 
-  // allen IDs in Liste einfügen und den Parameter-Typ vom äußeren Typ ableiten
+  // Dimensonen zählen
   int dim = 0;
   node_st *ids = PARAM_IDS(node);
   while (ids != NULL) {
-    char *id_name = IDS_ID(ids);
-    Variable var = {.name = STRcpy(id_name), .type = TY_int, .dim = 0};
-    vartable_insert(data->variables, var);
-    ids = IDS_NEXT(ids);
     dim++;
+    ids = IDS_NEXT(ids);
   }
 
+  // Erst Parameter, dann Dimensionen
   Variable var = {.name = STRcpy(name), .type = type, .dim = dim};
   vartable_insert(data->variables, var);
+
+  // allen IDs in Liste einfügen und den Parameter-Typ vom äußeren Typ ableiten
+  ids = PARAM_IDS(node);
+  while (ids != NULL) {
+    char *id_name = IDS_ID(ids);
+    Variable var_dim = {.name = STRcpy(id_name), .type = TY_int, .dim = 0};
+    vartable_insert(data->variables, var_dim);
+    ids = IDS_NEXT(ids);
+  }
 
   return node;
 }

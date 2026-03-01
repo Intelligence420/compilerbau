@@ -1,0 +1,33 @@
+extern void printInt(int val);
+extern void printNewlines(int num);
+
+export int g_val = 42;
+int internal_g = 100;
+
+void use_globals() {
+    printInt(g_val);
+    printNewlines(1);
+    printInt(internal_g);
+    printNewlines(1);
+}
+
+void shadow_globals() {
+    int g_val = 0;
+    printInt(g_val); // Should be 0
+    printNewlines(1);
+}
+
+export int main() {
+    printInt(g_val); // 42
+    printNewlines(1);
+    
+    use_globals(); // 42, 100
+    
+    shadow_globals(); // 0
+    
+    g_val = 10;
+    printInt(g_val); // 10
+    printNewlines(1);
+    
+    return 0;
+}

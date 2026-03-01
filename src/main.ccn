@@ -6,18 +6,24 @@ start phase RootPhase {
         Analysis;
         Adjustment;
         Optimization;
-        Print;
-        //AssemblyCode;
+        Print_Debug;
+        AssemblyCode;
         MemFree;
     }
 };
 
-traversal Print {
-    uid = PRT
+phase Print_Debug {
+    info = "Prints parsed Programm",
+    gate = do_print_debug,
+    
+    actions{
+        traversal Print {
+            uid = PRT
+        };
+    }
 };
 
-/*** Phases ***/
-
+/*** Analysis Phases ***/
 phase Analysis {
     info = "Performs context analysis on the AST",
 
@@ -46,19 +52,10 @@ phase Analysis {
                 DeclarationType return_type
             }
         };
-
-        traversal Constants {
-            uid = CST,
-            nodes = { Program, Num, Float },
-            travdata {
-                user ConstantTablePtr constants
-            }
-        };
     }
 };
 
 /*** Adjustment Phase ***/
-
 phase Adjustment {
     info = "Adjusts and normalizes the AST for assembly code generation",
 
@@ -70,7 +67,8 @@ phase Adjustment {
                 user VariableTablePtr variables,
                 user FunctionTablePtr functions,
                 bool free_mode, // indicates whether to free the original Forstatement after transformation
-                bool fix_mode // indicates whether to fix the original Forstatement after transformation
+                bool fix_mode, // indicates whether to fix the original Forstatement after transformation
+                user NodePtr current_fundef
             }
         };
 
@@ -80,13 +78,8 @@ phase Adjustment {
             travdata {
                 user VariableTablePtr variables,
                 user FunctionTablePtr functions,
-                bool fix_mode
+                bool fix_mode // indicates whether to fix the original Whilestatement after transformation
             }
-        };
-
-        traversal voidReturn {
-            uid = VR,
-            nodes = { Program, FunDef }
         };
 
         traversal DeclarationSplitting {
@@ -97,6 +90,11 @@ phase Adjustment {
             }
         };
 
+        traversal voidReturn {
+            uid = VR,
+            nodes = { Program, FunDef }
+        };
+
         traversal RenameNestedFunctions {
             uid = RNF,
             nodes = { Program, FunDef, FunCall },
@@ -105,33 +103,25 @@ phase Adjustment {
             }
         };
 
-/*
         traversal ArrayFlatten {
             uid = AFL,
-            nodes = { Program, FunDef, Var },
+            nodes = { Program, FunDef, Var, ArrExpr },
             travdata {
                 user VariableTablePtr variables
             }
         };
-
-        traversal SplitVarDef {
-            uid = SVD,
-            nodes = { FunBody },
-            travdata {
-                user VariableTablePtr variables
-            }
-        };
-        */
     }
 };
 
+/*** Optimization Phase ***/
 phase Optimization {
     info = "Performs simple optimizations (only constant folding)",
+    gate = do_optimization,
 
     actions {
         traversal ConstantsFolding {
             uid = CF,
-            nodes = Expr | { Assign, VarDef, Returnstatement, Ifstatement, Whilestatement, Dostatement, Forstatement, FunCallStmt },
+            nodes = Expr,
             travdata {
                 user ConstantTablePtr constants,
                 user VariableTablePtr variables
@@ -140,25 +130,45 @@ phase Optimization {
     }
 };
 
-/*
+/*** Code Generation Phase ***/
 phase AssemblyCode {
     info = "Generates assembly code from the AST",
+    gate = do_codegen,
 
     actions {
+        traversal Constants {
+            uid = CST,
+            nodes = { Program, Num, Float },
+            travdata {
+                user ConstantTablePtr constants
+            }
+        };
+
         traversal CodeGen {
             uid = CGN,
-            nodes = { },
+            nodes = { Program, FunDef, FunDec, GlobalDec, FunBody, VarDef,
+                      Assign, FunCallStmt, Ifstatement, Dostatement, Returnstatement,
+                      VarRef, Var, Binop, Monop, FunCall, TypeCast, ArrExpr,
+                      Num, Float, Bool },
             travdata {
                 user VariableTablePtr variables,
                 user FunctionTablePtr functions,
                 DeclarationType return_type,
-                user ConstantTablePtr constants
+                user ConstantTablePtr constants,
+                int label_counter,
+                int nesting_depth,
+                bool store_context,
+                int total_slots,
+                int param_slots,
+                int arrexpr_slot_offset,
+                int cint_0_idx,
+                int cflt_0_idx
             }
         };
     }
 };
-*/
 
+/*** Memory Freeing Phase ***/
 traversal MemFree {
     uid = FREE,
     nodes = { Program, FunDef, Var, FunCall }
@@ -189,7 +199,6 @@ enum DeclarationType {
     }
 };
 
-// TODO: GlobalDef => VarDef
 nodeset Decl = {FunDef, FunDec, GlobalDec, VarDef};
 nodeset Stmt = {Assign, FunCallStmt, Ifstatement, Whilestatement, Dostatement, Forstatement, Returnstatement};
 nodeset Expr {

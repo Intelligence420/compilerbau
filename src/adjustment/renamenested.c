@@ -58,14 +58,10 @@ node_st *RNFfuncall(node_st *node) {
         
         if (source_header != NULL) {
             char *new_full_name = FUNHEADER_NAME(source_header);
-            // If the name has changed in the source, update the call node's name attribute
+
             if (!STReq(FUNCALL_NAME(node), new_full_name)) {
                 MEMfree(FUNCALL_NAME(node));
                 FUNCALL_NAME(node) = STRcpy(new_full_name);
-                
-                // Note: We do NOT update fun->name because it's a shared pointer from the table snapshot.
-                // Updating it would either leak or cause double-free. 
-                // Since this traversal runs at the end of Adjustment, FUNCALL_NAME(node) is what matters.
             }
         }
     }

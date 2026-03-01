@@ -1,0 +1,24 @@
+extern void printInt(int val);
+extern void printNewlines(int num);
+
+void outer(int x) {
+    int y = 10;
+    
+    void inner1(int a) {
+        int z = 20;
+        
+        void inner2(int b) {
+            printInt(a + b + x + y + z);
+            printNewlines(1);
+        }
+        
+        inner2(5);
+    }
+    
+    inner1(3);
+}
+
+export int main() {
+    outer(7);
+    return 0;
+}

@@ -19,6 +19,7 @@ typedef struct Function {
   Parameters params;
   bool isextern;
   void *fundef_node;
+  int assembly_index; // For imported functions (jsre index)
 } Function;
 
 typedef struct FunctionTable {
@@ -33,3 +34,4 @@ void funtable_insert(FunctionTable *table, Function fun);
 void funtable_free(FunctionTable *table);
 bool funtable_contains(FunctionTable *table, char *name);
 Function *funtable_get_function(FunctionTable *table, char *name);
+Function *funtable_get_function_ptr(FunctionTable *table, char *name);

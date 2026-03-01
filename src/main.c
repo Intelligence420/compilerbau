@@ -22,8 +22,22 @@ void Usage(char *program) {
     printf("  --verbose/-v                 Enable verbose mode.\n");
     printf("  --breakpoint/-b <breakpoint> Set a breakpoint.\n");
     printf("  --structure/-s               Pretty print the structure of the compiler.\n");
+    printf("  --no-opt/-p                  Skip the optimization phase.\n");
+    printf("  --no-cg/-n                   Skip the codegen phase.\n");
+    printf("  --print-debug/-d             Print parsed program tree.\n");
 }
 
+bool do_optimization() {
+    return !global.skip_optimization;
+}
+
+bool do_codegen() {
+    return !global.skip_codegen;
+}
+
+bool do_print_debug() {
+    return global.print_debug;
+}
 
 
 /* Parse command lines. Usages the globals struct to store data. */
@@ -34,13 +48,16 @@ static int ProcessArgs(int argc, char *argv[])
         {"output",  required_argument, 0, 'o'},
         {"breakpoint", required_argument, 0, 'b'},
         {"structure", no_argument, 0, 's'},
+        {"no-opt", no_argument, 0, 'p'},
+        {"no-cg", no_argument, 0, 'n'},
+        {"print-debug", no_argument, 0, 'd'},
         {0, 0, 0, 0}};
 
   int option_index;
   int c;
 
   while (1) {
-      c = getopt_long(argc, argv, "hsvo:b:", long_options, &option_index);
+      c = getopt_long(argc, argv, "hsvo:b:pnd", long_options, &option_index);
 
       // End of options
       if (c == -1)
@@ -63,6 +80,15 @@ static int ProcessArgs(int argc, char *argv[])
         break;
       case 'o':
         global.output_file = optarg;
+        break;
+      case 'p':
+        global.skip_optimization = true;
+        break;
+      case 'n':
+        global.skip_codegen = true;
+        break;
+      case 'd':
+        global.print_debug = true;
         break;
       case 'h':
         Usage(argv[0]);

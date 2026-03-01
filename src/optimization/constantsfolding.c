@@ -13,11 +13,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-/**
- * Reads the given line number from the source file.
- * Caller is responsible for freeing the returned string.
- * Returns NULL if the file cannot be opened or the line does not exist.
- */
+/* Reads the given line number from the source file */
 static char *read_source_line(int line_num) {
     if (!global.input_file || line_num <= 0) return NULL;
     FILE *f = fopen(global.input_file, "r");
@@ -38,11 +34,7 @@ static char *read_source_line(int line_num) {
     return NULL;
 }
 
-/**
- * Reports a division-by-zero error using CTIobj so it prints with
- * the source line and a caret pointing to the operator, just like
- * a syntax error from the parser.
- */
+/* Reports a division-by-zero warning using CTIobj */
 static void report_div_by_zero(node_st *node, const char *op_name) {
     int line   = NODE_BLINE(node);
     int col    = NODE_BCOL(node);
@@ -58,30 +50,11 @@ static void report_div_by_zero(node_st *node, const char *op_name) {
         .line         = src_line
     };
 
-    CTIobj(CTI_ERROR, true, info, "%s by zero in constant expression.", op_name);
+    CTIobj(CTI_WARN, true, info, "%s by zero in constant expression.", op_name);
 
     if (src_line) MEMfree(src_line);
-    CTIabortOnError();
 }
 
-/**
- * Constant Folding Breakdown:
- * 
- * Done:
- * - Basic integer arithmetic (+, -, *, /, %) on constant Num nodes.
- * - Basic float arithmetic (+, -, *, /) on constant Float nodes.
- * - Boolean logical operations (&&, ||) on constant Bool nodes.
- * - Comparison operations (==, !=, <, <=, >, >=) for int, float, and bool.
- * - Unary operations: arithmetic negation (-) for int/float, logical not (!) for bool.
- * - Type casts between int, float, and bool constants.
- * 
- * TODO:
- * - Identity optimizations (e.g., x + 0 -> x, x * 1 -> x, x * 0 -> 0).
- * - Constant propagation (requires tracking variable values).
- * - Dead branch elimination (e.g., if (true) { ... } else { ... } -> { ... }).
- * - Folding for array expressions if all elements are constants.
- * - Handle potential overflow/underflow warnings.
- */
 
 void CFinit(void) {}
 void CFfini(void) {}
@@ -107,11 +80,13 @@ node_st *CFbinop(node_st *node) {
         case BO_div: 
             if (rval == 0) {
                 report_div_by_zero(node, "Division");
+                foldable = false;
             } else res = lval / rval; 
             break;
         case BO_mod:
             if (rval == 0) {
                 report_div_by_zero(node, "Modulo");
+                foldable = false;
             } else res = lval % rval;
             break;
         case BO_lt: res_bool = (lval < rval); is_bool = true; break;
@@ -150,6 +125,7 @@ node_st *CFbinop(node_st *node) {
         case BO_div: 
             if (rval == 0.0) {
                 report_div_by_zero(node, "Division");
+                foldable = false;
             } else res = lval / rval; 
             break;
         case BO_lt: res_bool = (lval < rval); is_bool = true; break;
@@ -249,7 +225,7 @@ node_st *CFtypecast(node_st *node) {
             CCNfree(node);
             return res;
         } else if (target_type == TY_int) {
-            // redundant cast, but let's handle it
+            // redundant cast
             node_st *res = ASTnum(val);
             EXPR_TYPE(res) = TY_int;
             CCNfree(node);
@@ -296,17 +272,7 @@ node_st *CFtypecast(node_st *node) {
     return node;
 }
 
-node_st *CFassign(node_st *node) {
-    TRAVchildren(node);
-    return node;
-}
-
 node_st *CFvardef(node_st *node) {
-    TRAVchildren(node);
-    return node;
-}
-
-node_st *CFreturnstatement(node_st *node) {
     TRAVchildren(node);
     return node;
 }
@@ -342,32 +308,6 @@ node_st *CFarrexpr(node_st *node) {
 }
 
 node_st *CFparam(node_st *node) {
-    TRAVchildren(node);
-    return node;
-}
-
-
-node_st *CFifstatement(node_st *node) {
-    TRAVchildren(node);
-    return node;
-}
-
-node_st *CFwhilestatement(node_st *node) {
-    TRAVchildren(node);
-    return node;
-}
-
-node_st *CFdostatement(node_st *node) {
-    TRAVchildren(node);
-    return node;
-}
-
-node_st *CFforstatement(node_st *node) {
-    TRAVchildren(node);
-    return node;
-}
-
-node_st *CFfuncallstmt(node_st *node) {
     TRAVchildren(node);
     return node;
 }

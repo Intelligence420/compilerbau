@@ -44,8 +44,15 @@ export int main() {
   }
   printNewlines(1);
 
+  // 7. a b c
   for (int j = a, b, c) {
     printInt(j);
+  }
+  printNewlines(1);
+
+  // 8. negativ steps
+  for (int i = 10, 0, -1){
+    printInt(i);
   }
   printNewlines(1);
 

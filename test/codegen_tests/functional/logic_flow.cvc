@@ -1,0 +1,46 @@
+extern void printInt(int val);
+extern void printBool(bool val);
+extern void printNewlines(int num);
+
+void printBool(bool b) {
+    if (b) {
+        printInt(1);
+    } else {
+        printInt(0);
+    }
+}
+
+export int main() {
+    bool t = true;
+    bool f = false;
+    int a = 10;
+    int b = 20;
+
+    printBool(t && f);
+    printNewlines(1);
+    printBool(t || f);
+    printNewlines(1);
+    printBool(!t);
+    printNewlines(1);
+
+    if (a < b) {
+        printInt(a);
+    } else {
+        printInt(b);
+    }
+    printNewlines(1);
+
+    while (a < b) {
+        a = a + 5;
+        printInt(a);
+        printNewlines(1);
+    }
+
+    do {
+        b = b - 5;
+        printInt(b);
+        printNewlines(1);
+    } while (b > 0);
+
+    return 0;
+}
