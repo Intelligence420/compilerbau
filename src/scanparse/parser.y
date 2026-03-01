@@ -17,6 +17,8 @@ extern int yylex();
 int yyerror(char *errname);
 extern FILE *yyin;
 void AddLocToNode(node_st *node, void *begin_loc, void *end_loc);
+extern char *lexer_get_current_line(void);
+extern void lexer_init_first_line(const char *line);
 
 
 %}
@@ -38,6 +40,7 @@ void AddLocToNode(node_st *node, void *begin_loc, void *end_loc);
 }
 
 %locations
+%define parse.error verbose
 
 %token BRACKET_L BRACKET_R COMMA SEMICOLON CURLBRACKET_L CURLBRACKET_R SQUAREBRACKET_L SQUAREBRACKET_R
 %token MINUS PLUS STAR SLASH PERCENT LE LT GE GT EQ NE OR AND NOT
@@ -303,8 +306,8 @@ expr:
   | MINUS expr %prec "monop"                     { $$ = ASTmonop($2, MO_neg); }
   | NOT expr %prec "monop"                      { $$ = ASTmonop($2, MO_not); }
   | expr STAR expr                               { $$ = ASTbinop($1, $3, BO_mul); }
-  | expr SLASH expr                              { $$ = ASTbinop($1, $3, BO_div); }
-  | expr PERCENT expr                            { $$ = ASTbinop($1, $3, BO_mod); }
+  | expr SLASH expr                              { $$ = ASTbinop($1, $3, BO_div); AddLocToNode($$, &@2, &@2); }
+  | expr PERCENT expr                            { $$ = ASTbinop($1, $3, BO_mod); AddLocToNode($$, &@2, &@2); }
   | expr PLUS expr                               { $$ = ASTbinop($1, $3, BO_add); }
   | expr MINUS expr                              { $$ = ASTbinop($1, $3, BO_sub); }
   | expr LT expr                                 { $$ = ASTbinop($1, $3, BO_lt); }
@@ -395,10 +398,22 @@ void AddLocToNode(node_st *node, void *begin_loc, void *end_loc)
 
 int yyerror(char *error)
 {
-  CTI(CTI_ERROR, true, "line %d, col %d\nError parsing source code: %s\n",
-            global.line, global.col, error);
-  CTIabortOnError();
-  return 0;
+    char *src_line = lexer_get_current_line();
+
+    struct ctinfo info = {
+        .first_line   = yylloc.first_line,
+        .first_column = yylloc.first_column,
+        .last_line    = yylloc.last_line,
+        .last_column  = yylloc.last_column,
+        .filename     = global.input_file,
+        .line         = src_line
+    };
+
+    CTIobj(CTI_ERROR, true, info, "Syntax error: %s", error);
+
+    MEMfree(src_line);
+    CTIabortOnError();
+    return 0;
 }
 
 node_st *SPdoScanParse(node_st *root)
@@ -409,6 +424,19 @@ node_st *SPdoScanParse(node_st *root)
         CTI(CTI_ERROR, true, "Cannot open file '%s'.", global.input_file);
         CTIabortOnError();
     }
+
+    /* Pre-load the first source line so errors on line 1 can show it. */
+    char first_line_buf[1024] = {0};
+    if (fgets(first_line_buf, sizeof(first_line_buf), yyin)) {
+        /* Strip trailing newline */
+        int len = (int)strlen(first_line_buf);
+        while (len > 0 && (first_line_buf[len-1] == '\n' || first_line_buf[len-1] == '\r'))
+            first_line_buf[--len] = '\0';
+        /* Feed it into the lexer's line buffer via a tiny helper */
+        lexer_init_first_line(first_line_buf);
+    }
+    rewind(yyin);
+
     yyparse();
     return parseresult;
 }

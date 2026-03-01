@@ -19,7 +19,7 @@ extern int yyerror(char *errname);
   global.col += yyleng;  \
   return( token);
 
-#define LINEBUF_SIZE 256
+#define LINEBUF_SIZE 1024
 #define YY_NO_UNPUT
 #define YY_NO_INPUT
 
@@ -28,6 +28,21 @@ static inline void token_action();
 int yycolumn = 1;
 #define YY_USER_ACTION token_action();
 
+/* Stores the text of the current source line for use in error messages. */
+static char current_line_buf[LINEBUF_SIZE] = {0};
+static int  current_line_len = 0;
+
+/* Returns a copy of the current source line (caller must free). */
+char *lexer_get_current_line(void) {
+    return STRcpy(current_line_buf);
+}
+
+/* Called by the parser before yyparse() to seed the first line. */
+void lexer_init_first_line(const char *line) {
+    strncpy(current_line_buf, line, LINEBUF_SIZE - 1);
+    current_line_buf[LINEBUF_SIZE - 1] = '\0';
+    current_line_len = (int)strlen(current_line_buf);
+}
 
 %}
 
@@ -135,15 +150,32 @@ exponent [eE][+-]?[0-9]+
                              }
 
                              FILTER(FLOAT); }
+
 \n.*                       {
+                             /* Save the new line's text so current_line_buf
+                                always holds the line currently being lexed. */
+                             int len = yyleng - 1; /* skip leading \n */
+                             if (len >= LINEBUF_SIZE) len = LINEBUF_SIZE - 1;
+                             strncpy(current_line_buf, yytext + 1, len);
+                             current_line_buf[len] = '\0';
+                             current_line_len = len;
+                             /* Strip trailing \r / \n */
+                             while (current_line_len > 0 &&
+                                    (current_line_buf[current_line_len - 1] == '\r' ||
+                                     current_line_buf[current_line_len - 1] == '\n')) {
+                                 current_line_buf[--current_line_len] = '\0';
+                             }
+
                              yycolumn = 1;
                              global.line += 1;
                              global.col = 0;
                              yyless(1);
                            }
 
-[ \t]                      { global.col += yyleng;
-                           }
+[ \t]                      { global.col += yyleng; }
+
+.                          { yyerror("unexpected character"); }
+
 %%
 
 static inline void token_action() {
