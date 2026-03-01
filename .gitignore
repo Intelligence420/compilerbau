@@ -48,3 +48,5 @@ build*/
 !.vscode/c_cpp_properties.json
 
 .idea
+/test/compile/out
+.DS_Store

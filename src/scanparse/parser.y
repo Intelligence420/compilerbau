@@ -1,5 +1,6 @@
 %{
 
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -16,6 +17,8 @@ extern int yylex();
 int yyerror(char *errname);
 extern FILE *yyin;
 void AddLocToNode(node_st *node, void *begin_loc, void *end_loc);
+extern char *lexer_get_current_line(void);
+extern void lexer_init_first_line(const char *line);
 
 
 %}
@@ -37,8 +40,9 @@ void AddLocToNode(node_st *node, void *begin_loc, void *end_loc);
 }
 
 %locations
+%define parse.error verbose
 
-%token BRACKET_L BRACKET_R COMMA SEMICOLON CURLBRACKET_L CURLBRACKET_R SQUAREBRACKET_L SQUAREBRACKET_R COLON DOT DOLLAR QUESTION HASH APOSTROPHE
+%token BRACKET_L BRACKET_R COMMA SEMICOLON CURLBRACKET_L CURLBRACKET_R SQUAREBRACKET_L SQUAREBRACKET_R
 %token MINUS PLUS STAR SLASH PERCENT LE LT GE GT EQ NE OR AND NOT
 %token TRUEVAL FALSEVAL LET RETURNSTATEMENT
 %token IFSTATEMENT ELSESTATEMENT
@@ -302,8 +306,8 @@ expr:
   | MINUS expr %prec "monop"                     { $$ = ASTmonop($2, MO_neg); }
   | NOT expr %prec "monop"                      { $$ = ASTmonop($2, MO_not); }
   | expr STAR expr                               { $$ = ASTbinop($1, $3, BO_mul); }
-  | expr SLASH expr                              { $$ = ASTbinop($1, $3, BO_div); }
-  | expr PERCENT expr                            { $$ = ASTbinop($1, $3, BO_mod); }
+  | expr SLASH expr                              { $$ = ASTbinop($1, $3, BO_div); AddLocToNode($$, &@2, &@2); }
+  | expr PERCENT expr                            { $$ = ASTbinop($1, $3, BO_mod); AddLocToNode($$, &@2, &@2); }
   | expr PLUS expr                               { $$ = ASTbinop($1, $3, BO_add); }
   | expr MINUS expr                              { $$ = ASTbinop($1, $3, BO_sub); }
   | expr LT expr                                 { $$ = ASTbinop($1, $3, BO_lt); }
@@ -391,82 +395,25 @@ void AddLocToNode(node_st *node, void *begin_loc, void *end_loc)
     NODE_ELINE(node) = loc_e->last_line;
     NODE_ECOL(node) = loc_e->last_column;
 }
-char* get_line_by_number(const char* filename, int target_line) {
-    // target_line ist 1-indiziert (entspricht der angezeigten Zeilennummer)
-    FILE* file = fopen(filename, "r");
-    if (!file) {
-        return NULL;
-    }
-
-    char* line = NULL;
-    size_t len = 0;
-    ssize_t read;
-    int current_line = 0;
-
-    while ((read = getline(&line, &len, file)) != -1) {
-      //printf("Read line %d: %s", current_line + 1, line); // Debug-Ausgabe
-        current_line++;
-        if (current_line == target_line) {
-            fclose(file);
-            // Abschliessendes Newline entfernen
-            if (read > 0 && line[read - 1] == '\n') {
-                line[read - 1] = '\0';
-            }
-            return line;
-        }
-    }
-
-    fclose(file);
-    if (line) free(line);
-    return NULL;
-}
-
-void append_char(char **str, char c) {
-    size_t len = (*str) ? strlen(*str) : 0;
-    
-    // Speicher um 2 Bytes erweitern: 1 für das Zeichen, 1 für '\0'
-    char *temp = realloc(*str, len + 2);
-    
-    if (temp == NULL) {
-        // Fehlerbehandlung: Speicher voll
-        return;
-    }
-
-    *str = temp;
-    (*str)[len] = c;      // Zeichen an die alte Endposition setzen
-    (*str)[len + 1] = '\0'; // String korrekt terminieren
-}
-
-char* get_syntax_line_by_underscore(const char* filename, int target_line) {
-    FILE* file = fopen(filename, "r");
-    if (!file) {
-        return NULL;
-    }
-
-    char *line = NULL;
-
-    for (int i = 0; i < target_line - 1; i++) {
-        append_char(&line, '_'); // Leerzeichen für alle Zeilen vor der Zielzeile
-    }
-    append_char(&line, '^'); // Markierung für die Zielzeile
-    fclose(file);
-    return line; // Achtung: Der Aufrufer muss free() benutzen!
-}
 
 int yyerror(char *error)
 {
-  char *line = get_line_by_number(global.input_file, global.line + 1);
-  char *syntax_line = get_syntax_line_by_underscore(global.input_file, global.col);
+    char *src_line = lexer_get_current_line();
 
-  CTI(CTI_ERROR, true, "line %d, col %d\nError parsing source code: %s\n",
-            global.line+1, global.col, error);
-  if (line != NULL && syntax_line != NULL) {
-    printf("%s\n%s\n", line, syntax_line);
-    free(line);
-    free(syntax_line);
-  }
-  CTIabortOnError();
-  return 0;
+    struct ctinfo info = {
+        .first_line   = yylloc.first_line,
+        .first_column = yylloc.first_column,
+        .last_line    = yylloc.last_line,
+        .last_column  = yylloc.last_column,
+        .filename     = global.input_file,
+        .line         = src_line
+    };
+
+    CTIobj(CTI_ERROR, true, info, "Syntax error: %s", error);
+
+    MEMfree(src_line);
+    CTIabortOnError();
+    return 0;
 }
 
 node_st *SPdoScanParse(node_st *root)
@@ -477,6 +424,19 @@ node_st *SPdoScanParse(node_st *root)
         CTI(CTI_ERROR, true, "Cannot open file '%s'.", global.input_file);
         CTIabortOnError();
     }
+
+    /* Pre-load the first source line so errors on line 1 can show it. */
+    char first_line_buf[1024] = {0};
+    if (fgets(first_line_buf, sizeof(first_line_buf), yyin)) {
+        /* Strip trailing newline */
+        int len = (int)strlen(first_line_buf);
+        while (len > 0 && (first_line_buf[len-1] == '\n' || first_line_buf[len-1] == '\r'))
+            first_line_buf[--len] = '\0';
+        /* Feed it into the lexer's line buffer via a tiny helper */
+        lexer_init_first_line(first_line_buf);
+    }
+    rewind(yyin);
+
     yyparse();
     return parseresult;
 }
