@@ -306,6 +306,12 @@ node_st *FTWforstatement(node_st *node) {
   NODE_ECOL(res) = NODE_ECOL(node);
 
   free_attributes(node, data);
+  free_attributes(until, data);
+  if (orig_step) {
+    free_attributes(orig_step, data);
+  } else {
+    free_attributes(step, data);
+  }
   CCNfree(node);
   CCNfree(until);
   if (orig_step == NULL) {
