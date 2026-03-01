@@ -6,7 +6,7 @@ start phase RootPhase {
         Analysis;
         Adjustment;
         Optimization;
-        Print;
+        //Print;
         AssemblyCode;
         MemFree;
     }
