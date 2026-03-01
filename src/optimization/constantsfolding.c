@@ -5,8 +5,64 @@
 #include "ccngen/trav_data.h"
 #include "palm/memory.h"
 #include "palm/str.h"
+#include "palm/ctinfo.h"
 #include "util/vartable.h"
 #include "user_types.h"
+#include "global/globals.h"
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+/**
+ * Reads the given line number from the source file.
+ * Caller is responsible for freeing the returned string.
+ * Returns NULL if the file cannot be opened or the line does not exist.
+ */
+static char *read_source_line(int line_num) {
+    if (!global.input_file || line_num <= 0) return NULL;
+    FILE *f = fopen(global.input_file, "r");
+    if (!f) return NULL;
+
+    char buf[1024];
+    int current = 0;
+    while (fgets(buf, sizeof(buf), f)) {
+        current++;
+        if (current == line_num) {
+            fclose(f);
+            int len = (int)strlen(buf);
+            if (len > 0 && buf[len - 1] == '\n') buf[len - 1] = '\0';
+            return STRcpy(buf);
+        }
+    }
+    fclose(f);
+    return NULL;
+}
+
+/**
+ * Reports a division-by-zero error using CTIobj so it prints with
+ * the source line and a caret pointing to the operator, just like
+ * a syntax error from the parser.
+ */
+static void report_div_by_zero(node_st *node, const char *op_name) {
+    int line   = NODE_BLINE(node);
+    int col    = NODE_BCOL(node);
+    int ecol   = NODE_ECOL(node);
+    char *src_line = read_source_line(line);
+
+    struct ctinfo info = {
+        .first_line   = line,
+        .first_column = col,
+        .last_line    = line,
+        .last_column  = (ecol > 0 ? ecol : col),
+        .filename     = global.input_file,
+        .line         = src_line
+    };
+
+    CTIobj(CTI_ERROR, true, info, "%s by zero in constant expression.", op_name);
+
+    if (src_line) MEMfree(src_line);
+    CTIabortOnError();
+}
 
 /**
  * Constant Folding Breakdown:
@@ -49,12 +105,14 @@ node_st *CFbinop(node_st *node) {
         case BO_sub: res = lval - rval; break;
         case BO_mul: res = lval * rval; break;
         case BO_div: 
-            if (rval == 0) foldable = false;
-            else res = lval / rval; 
+            if (rval == 0) {
+                report_div_by_zero(node, "Division");
+            } else res = lval / rval; 
             break;
         case BO_mod:
-            if (rval == 0) foldable = false;
-            else res = lval % rval;
+            if (rval == 0) {
+                report_div_by_zero(node, "Modulo");
+            } else res = lval % rval;
             break;
         case BO_lt: res_bool = (lval < rval); is_bool = true; break;
         case BO_le: res_bool = (lval <= rval); is_bool = true; break;
@@ -90,8 +148,9 @@ node_st *CFbinop(node_st *node) {
         case BO_sub: res = lval - rval; break;
         case BO_mul: res = lval * rval; break;
         case BO_div: 
-            if (rval == 0.0) foldable = false;
-            else res = lval / rval; 
+            if (rval == 0.0) {
+                report_div_by_zero(node, "Division");
+            } else res = lval / rval; 
             break;
         case BO_lt: res_bool = (lval < rval); is_bool = true; break;
         case BO_le: res_bool = (lval <= rval); is_bool = true; break;
