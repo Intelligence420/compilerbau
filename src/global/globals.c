@@ -15,4 +15,5 @@ void GLBinitializeGlobals()
     global.output_file = NULL;
     global.skip_optimization = false;
     global.skip_codegen = false;
+    global.print_debug = false;
 }

@@ -6,14 +6,21 @@ start phase RootPhase {
         Analysis;
         Adjustment;
         Optimization;
-        //Print;
+        Print_Debug;
         AssemblyCode;
         MemFree;
     }
 };
 
-traversal Print {
-    uid = PRT
+phase Print_Debug {
+    info = "Prints parsed Programm",
+    gate = do_print_debug,
+    
+    actions{
+        traversal Print {
+            uid = PRT
+        };
+    }
 };
 
 /*** Analysis Phases ***/
