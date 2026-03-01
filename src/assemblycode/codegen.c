@@ -409,7 +409,7 @@ node_st *CGNfundec(node_st *node) {
 /* CGNglobaldec
    VM-Spezifikation (Abschnitt 2.1.3, .importvar):
     "defines an import entry that should, at load-time, be linked up
-*    with an external definition of a variable" */
+     with an external definition of a variable" */
 node_st *CGNglobaldec(node_st *node) {
     (void)node;
     return node;
@@ -658,7 +658,6 @@ node_st *CGNreturnstatement(node_st *node) {
     return node;
 }
 
-/* Ausdrücke */
 node_st *CGNvarref(node_st *node) {
     TRAVdo(VARREF_VAR(node));
     return node;

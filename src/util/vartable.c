@@ -4,8 +4,6 @@
 #include "palm/str.h"
 #include <stdbool.h>
 
-// TODO: return VarReferenz
-// - count l
 static Variable *vartable_local_get_variable(VariableTable *table, char *name) {
   for (int i = 0; i < table->size; i++) {
     if (table->variables[i].valid && STReq(name, table->variables[i].name)) {

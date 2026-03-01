@@ -19,9 +19,7 @@ void FTWinit(void) {
 }
 void FTWfini(void) {}
 
-/**
- * Traverses the program to set up the variable table context for the transformation.
- */
+/* Traverses the program to set up the variable table context for the transformation */
 node_st *FTWprogram(node_st *node) {
   struct data_ftw *data = DATA_FTW_GET();
   data->variables = PROGRAM_VARIABLES(node);
@@ -30,9 +28,7 @@ node_st *FTWprogram(node_st *node) {
   return node;
 }
 
-/**
- * Updates the variable table context when entering a function.
- */
+/* Updates the variable table context when entering a function */
 node_st *FTWfundef(node_st *node) {
   struct data_ftw *data = DATA_FTW_GET();
   VariableTable *old_v = data->variables;
@@ -73,7 +69,7 @@ static void ensure_vardef(struct data_ftw *data, char *name) {
   FUNBODY_DECL(body) = ASTvardefs(new_vardef, FUNBODY_DECL(body));
 
   // Re-validate the for-loop variable in the variable table
-  // (find the first entry with this name and make it valid/writable)
+  // find the first entry with this name and make it valid/writable
   if (data->variables != NULL) {
     for (int i = 0; i < data->variables->size; i++) {
       if (STReq(data->variables->variables[i].name, name)) {
@@ -113,6 +109,7 @@ node_st *FTWfuncall(node_st *node) {
   return node;
 }
 
+// Hilfs Funktionen
 static void free_attributes(node_st *node, struct data_ftw *data);
 
 static node_st *copy_and_fix(node_st *node, struct data_ftw *data) {
@@ -153,28 +150,7 @@ static bool is_negative(node_st *node) {
   return false;
 }
 
-/**
- * Generic visitors to ensure children are traversed (needed for free_attributes)
- */
-node_st *FTWbinop(node_st *node) { TRAVchildren(node); return node; }
-node_st *FTWmonop(node_st *node) { TRAVchildren(node); return node; }
-node_st *FTWvarref(node_st *node) { TRAVchildren(node); return node; }
-node_st *FTWtypecast(node_st *node) { TRAVchildren(node); return node; }
-node_st *FTWarrexpr(node_st *node) { TRAVchildren(node); return node; }
-node_st *FTWexprs(node_st *node) { TRAVchildren(node); return node; }
-node_st *FTWifstatement(node_st *node) { TRAVchildren(node); return node; }
-node_st *FTWwhilestatement(node_st *node) { TRAVchildren(node); return node; }
-node_st *FTWdostatement(node_st *node) { TRAVchildren(node); return node; }
-node_st *FTWreturnstatement(node_st *node) { TRAVchildren(node); return node; }
-node_st *FTWassign(node_st *node) { TRAVchildren(node); return node; }
-node_st *FTWfuncallstmt(node_st *node) { TRAVchildren(node); return node; }
-node_st *FTWblock(node_st *node) { TRAVchildren(node); return node; }
-node_st *FTWvardef(node_st *node) { TRAVchildren(node); return node; }
-node_st *FTWvardefs(node_st *node) { TRAVchildren(node); return node; }
-
-/**
- * Handles the list of statements
- */
+/* Handles the list of statements */
 node_st *FTWstmts(node_st *node) {
   struct data_ftw *data = DATA_FTW_GET();
   if (data->free_mode) {
@@ -212,9 +188,7 @@ node_st *FTWstmts(node_st *node) {
   return node;
 }
 
-/**
- * Transforms for into while 
- */
+/* Transforms for into while */
 node_st *FTWforstatement(node_st *node) {
   struct data_ftw *data = DATA_FTW_GET();
   if (data->free_mode) {

@@ -16,8 +16,7 @@ traversal Print {
     uid = PRT
 };
 
-/*** Phases ***/
-
+/*** Analysis Phases ***/
 phase Analysis {
     info = "Performs context analysis on the AST",
 
@@ -50,17 +49,13 @@ phase Analysis {
 };
 
 /*** Adjustment Phase ***/
-
 phase Adjustment {
     info = "Adjusts and normalizes the AST for assembly code generation",
 
     actions {
         traversal ForToWhile {
             uid = FTW,
-            nodes = { Program, FunDef, Forstatement, Stmts, Var, FunCall, 
-                      Binop, Monop, VarRef, TypeCast, ArrExpr, Exprs,
-                      Ifstatement, Whilestatement, Dostatement, Returnstatement,
-                      Assign, FunCallStmt, Block, Vardef, Vardefs },
+            nodes = { Program, FunDef, Forstatement, Stmts, Var, FunCall },
             travdata {
                 user VariableTablePtr variables,
                 user FunctionTablePtr functions,
@@ -76,7 +71,7 @@ phase Adjustment {
             travdata {
                 user VariableTablePtr variables,
                 user FunctionTablePtr functions,
-                bool fix_mode
+                bool fix_mode // indicates whether to fix the original Whilestatement after transformation
             }
         };
 
@@ -111,6 +106,7 @@ phase Adjustment {
     }
 };
 
+/*** Optimization Phase ***/
 phase Optimization {
     info = "Performs simple optimizations (only constant folding)",
     gate = do_optimization,
@@ -118,7 +114,7 @@ phase Optimization {
     actions {
         traversal ConstantsFolding {
             uid = CF,
-            nodes = Expr | { Assign, VarDef, Returnstatement, Ifstatement, Whilestatement, Dostatement, Forstatement, FunCallStmt },
+            nodes = Expr,
             travdata {
                 user ConstantTablePtr constants,
                 user VariableTablePtr variables
@@ -127,6 +123,7 @@ phase Optimization {
     }
 };
 
+/*** Code Generation Phase ***/
 phase AssemblyCode {
     info = "Generates assembly code from the AST",
     gate = do_codegen,
@@ -164,7 +161,7 @@ phase AssemblyCode {
     }
 };
 
-
+/*** Memory Freeing Phase ***/
 traversal MemFree {
     uid = FREE,
     nodes = { Program, FunDef, Var, FunCall }
@@ -195,7 +192,6 @@ enum DeclarationType {
     }
 };
 
-// TODO: GlobalDef => VarDef
 nodeset Decl = {FunDef, FunDec, GlobalDec, VarDef};
 nodeset Stmt = {Assign, FunCallStmt, Ifstatement, Whilestatement, Dostatement, Forstatement, Returnstatement};
 nodeset Expr {

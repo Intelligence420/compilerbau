@@ -117,7 +117,7 @@ node_st *AFLvar(node_st *node) {
     char *name = VAR_NAME(node);
 
     // Find the array variable's position in the table to locate its dim entries
-    // The dim entries are stored at array_idx+1, array_idx+2, etc.
+    // The dim entries are stored: array_idx+1, array_idx+2, ...
     int array_idx = -1;
     VariableTable *found_table = NULL;
     {

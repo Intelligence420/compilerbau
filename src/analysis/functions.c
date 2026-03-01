@@ -1,11 +1,3 @@
-/**
- * Was ich mir so alle von Mai gemerkt habe (basically nichts, aber: Wer will
- * mich aufhalten?):
- * - Jede Scope-Ebene hat eine eigene Funktionsliste
- * - Tiefere Ebenen haben einen Parent-Pointer zur übergeordneten Liste
- * - Bei voller Kapazität wird die Liste automatisch per realloc verdoppelt
- */
-
 #include "ccn/ccn.h"
 #include "ccn/dynamic_core.h"
 #include "ccngen/ast.h"

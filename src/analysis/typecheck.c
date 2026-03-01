@@ -50,7 +50,6 @@ node_st *TYCbinop(node_st *node) {
 
   if (left_type != right_type) {
     CTI(CTI_ERROR, true, "Type error in binary operation: mismatched types.");
-    // irgendwie CTI types einsetzten
   }
 
   if (EXPR_DIMENSIONEN(left) != 0 || EXPR_DIMENSIONEN(right) != 0) {
@@ -318,8 +317,7 @@ node_st *TYCvardef(node_st *node) {
         CTI(CTI_ERROR, true,
             "cannot initialize array with incompatible expression");
       }
-      /* Check that the number of elements in the array literal matches
-       * the declared first dimension size. */
+      /* Check that the number of elements in the array literal matches the declared first dimension size */
       if (NODE_TYPE(expr) == NT_ARREXPR) {
         /* Count elements in the arrexpr */
         int elem_count = 0;
