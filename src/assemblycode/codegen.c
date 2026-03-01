@@ -488,7 +488,6 @@ node_st *CGNvardef(node_st *node) {
 /* Statements */
 node_st *CGNassign(node_st *node) {
     struct data_cgn *data = DATA_CGN_GET();
-    TRAVdo(ASSIGN_EXPR(node)); // RHS auf Stack
 
     node_st *var = ASSIGN_LET(node);
     if (var == NULL) return node;
@@ -496,14 +495,12 @@ node_st *CGNassign(node_st *node) {
     VarReferenz *ref = VAR_VARPTR(var);
     if (ref == NULL) return node;
 
-    // Use ref->l directly as the index (avoids name-shadowing lookup errors).
-    // ref->l is set by return_varref to the index in the correct scope table.
-    // For REF_GLOBAL/REF_EXTERN: ref->l == assembly_index (assigned in same iteration order).
-    // For REF_LOCAL: ref->l == slot_index (also assigned in same iteration order).
-    int idx = ref->l;  // assembly_index for global/extern, slot_index for local
-
+    int idx = ref->l;
     char prefix = type_prefix(ref->type);
+
     if (VAR_EXPRS(var) != NULL) {
+        // Element access: a[i] = expr
+        TRAVdo(ASSIGN_EXPR(node)); // RHS auf Stack
         TRAVdo(VAR_EXPRS(var)); // Index
         if (ref->reftype == REF_EXTERN) {
             emit("aloade %d", idx);
@@ -514,7 +511,73 @@ node_st *CGNassign(node_st *node) {
             else emit("aload %d", idx);
         }
         emit("%cstorea", prefix);
+    } else if (ref->dim > 0 && NODE_TYPE(ASSIGN_EXPR(node)) != NT_ARREXPR) {
+        // Scalar-to-array broadcast: b = 7 where b is int[2,3]
+        // Generate a fill loop over all elements
+        // Store scalar value in a temp slot
+        TRAVdo(ASSIGN_EXPR(node)); // RHS (scalar) auf Stack
+        int temp_val = data->total_slots - 20 + data->arrexpr_slot_offset;
+        data->arrexpr_slot_offset++;
+        int temp_idx_slot = data->total_slots - 20 + data->arrexpr_slot_offset;
+        data->arrexpr_slot_offset++;
+        emit("%cstore %d", prefix, temp_val);
+
+        // Calculate total size = dim0 * dim1 * ...
+        for (int d = 0; d < ref->dim; d++) {
+            if (ref->reftype == REF_EXTERN) {
+                emit("iloade %d", idx + 1 + d);
+            } else if (ref->reftype == REF_GLOBAL) {
+                emit("iloadg %d", idx + 1 + d);
+            } else {
+                if (ref->n > 0) emit("iloadn %d %d", ref->n, idx + 1 + d);
+                else emit("iload %d", idx + 1 + d);
+            }
+            if (d > 0) emit("imul");
+        }
+        // Total size is on stack, store to temp
+        int temp_size = data->total_slots - 20 + data->arrexpr_slot_offset;
+        data->arrexpr_slot_offset++;
+        emit("istore %d", temp_size);
+
+        // Initialize loop counter i = 0
+        Constant c0 = {.type = TY_int, .cint = 0};
+        int c0_idx = consttable_insert(data->constants, c0);
+        emit("iloadc %d", c0_idx);
+        emit("istore %d", temp_idx_slot);
+
+        // Loop
+        int lbl_loop = new_label(data);
+        int lbl_end = new_label(data);
+        emit_label("fill_%d", lbl_loop);
+        emit("iload %d", temp_idx_slot);
+        emit("iload %d", temp_size);
+        emit("ilt");
+        emit("branch_f fill_end_%d", lbl_end);
+
+        // Store: value, index, array_ref
+        emit("%cload %d", prefix, temp_val);
+        emit("iload %d", temp_idx_slot);
+        if (ref->reftype == REF_EXTERN) {
+            emit("aloade %d", idx);
+        } else if (ref->reftype == REF_GLOBAL) {
+            emit("aloadg %d", idx);
+        } else {
+            if (ref->n > 0) emit("aloadn %d %d", ref->n, idx);
+            else emit("aload %d", idx);
+        }
+        emit("%cstorea", prefix);
+
+        // i++
+        emit("iload %d", temp_idx_slot);
+        Constant c1 = {.type = TY_int, .cint = 1};
+        int c1_idx = consttable_insert(data->constants, c1);
+        emit("iloadc %d", c1_idx);
+        emit("iadd");
+        emit("istore %d", temp_idx_slot);
+        emit("jump fill_%d", lbl_loop);
+        emit_label("fill_end_%d", lbl_end);
     } else {
+        TRAVdo(ASSIGN_EXPR(node)); // RHS auf Stack
         char full_prefix = (ref->dim > 0) ? 'a' : prefix;
         if (ref->reftype == REF_EXTERN) {
             emit("%cstoree %d", full_prefix, idx);
@@ -634,11 +697,40 @@ node_st *CGNvar(node_st *node) {
 }
 
 node_st *CGNbinop(node_st *node) {
-    TRAVdo(BINOP_LEFT(node));
-    TRAVdo(BINOP_RIGHT(node));
     enum BinOpType op = BINOP_OP(node);
     enum DeclarationType type = EXPR_TYPE(BINOP_LEFT(node));
     char prefix = type_prefix(type);
+
+    // Short-circuit evaluation for && and ||
+    if (op == BO_and) {
+        struct data_cgn *data = DATA_CGN_GET();
+        int lbl_false = new_label(data);
+        int lbl_end   = new_label(data);
+        TRAVdo(BINOP_LEFT(node));
+        emit("branch_f sc_false_%d", lbl_false);
+        TRAVdo(BINOP_RIGHT(node));
+        emit("jump sc_end_%d", lbl_end);
+        emit_label("sc_false_%d", lbl_false);
+        emit("bloadc_f");
+        emit_label("sc_end_%d", lbl_end);
+        return node;
+    }
+    if (op == BO_or) {
+        struct data_cgn *data = DATA_CGN_GET();
+        int lbl_true = new_label(data);
+        int lbl_end  = new_label(data);
+        TRAVdo(BINOP_LEFT(node));
+        emit("branch_t sc_true_%d", lbl_true);
+        TRAVdo(BINOP_RIGHT(node));
+        emit("jump sc_end_%d", lbl_end);
+        emit_label("sc_true_%d", lbl_true);
+        emit("bloadc_t");
+        emit_label("sc_end_%d", lbl_end);
+        return node;
+    }
+
+    TRAVdo(BINOP_LEFT(node));
+    TRAVdo(BINOP_RIGHT(node));
 
     switch (op) {
     case BO_add: if (type == TY_bool) emit("badd"); else emit("%cadd", prefix); break;
@@ -652,8 +744,6 @@ node_st *CGNbinop(node_st *node) {
     case BO_ge:  emit("%cge",  prefix); break;
     case BO_eq:  emit("%ceq",  prefix); break;
     case BO_ne:  emit("%cne",  prefix); break;
-    case BO_and: emit("bmul"); break;
-    case BO_or:  emit("badd"); break;
     default: break;
     }
     return node;

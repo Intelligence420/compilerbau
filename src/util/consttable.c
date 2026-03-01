@@ -5,6 +5,7 @@
 #include "palm/memory.h"
 #include "palm/str.h"
 #include <stdbool.h>
+#include <string.h>
 
 #define INITIAL_CAPACITY 2
 
@@ -27,7 +28,7 @@ int consttable_insert(ConstantTable *table, Constant con) {
     Constant entry = table->constants[i];
     if (con.type == entry.type &&
         ((con.type == TY_int && con.cint == entry.cint) ||
-         (con.type == TY_float && con.cflt == entry.cflt))) {
+         (con.type == TY_float && memcmp(&con.cflt, &entry.cflt, sizeof(float)) == 0))) {
       return i;
     }
   }

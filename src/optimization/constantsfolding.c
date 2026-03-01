@@ -58,10 +58,9 @@ static void report_div_by_zero(node_st *node, const char *op_name) {
         .line         = src_line
     };
 
-    CTIobj(CTI_ERROR, true, info, "%s by zero in constant expression.", op_name);
+    CTIobj(CTI_WARN, true, info, "%s by zero in constant expression.", op_name);
 
     if (src_line) MEMfree(src_line);
-    CTIabortOnError();
 }
 
 /**
@@ -109,11 +108,13 @@ node_st *CFbinop(node_st *node) {
         case BO_div: 
             if (rval == 0) {
                 report_div_by_zero(node, "Division");
+                foldable = false;
             } else res = lval / rval; 
             break;
         case BO_mod:
             if (rval == 0) {
                 report_div_by_zero(node, "Modulo");
+                foldable = false;
             } else res = lval % rval;
             break;
         case BO_lt: res_bool = (lval < rval); is_bool = true; break;

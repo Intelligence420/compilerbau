@@ -115,6 +115,26 @@ node_st *AFLvar(node_st *node) {
 
     // Flatten: a[e0, e1, ..., en] -> a[(((e0 * dim1) + e1) * dim2) + e2 ...]
     char *name = VAR_NAME(node);
+
+    // Find the array variable's position in the table to locate its dim entries
+    // The dim entries are stored at array_idx+1, array_idx+2, etc.
+    int array_idx = -1;
+    VariableTable *found_table = NULL;
+    {
+        VariableTable *curr = data->variables;
+        while (curr != NULL) {
+            for (int i = 0; i < curr->size; i++) {
+                if (STReq(name, curr->variables[i].name) && curr->variables[i].dim > 0) {
+                    array_idx = i;
+                    found_table = curr;
+                    break;
+                }
+            }
+            if (array_idx >= 0) break;
+            curr = curr->parent;
+        }
+    }
+
     node_st *current_index = EXPRS_EXPR(exprs);
     EXPRS_EXPR(exprs) = NULL; // Take ownership
     node_st *next_exprs = EXPRS_NEXT(exprs);
@@ -124,11 +144,22 @@ node_st *AFLvar(node_st *node) {
     int dim_idx = 1;
     while (next_exprs != NULL) {
         // Create dimension variable reference
-        char buf[256];
-        snprintf(buf, sizeof(buf), "__%s_dim_%d", name, dim_idx);
+        // Use the actual dim variable name from the table
+        char *dim_name = NULL;
+        if (found_table != NULL && array_idx >= 0 && 
+            (array_idx + 1 + dim_idx) < found_table->size) {
+            dim_name = found_table->variables[array_idx + 1 + dim_idx].name;
+        }
         
-        node_st *dim_var = ASTvar(NULL, STRcpy(buf));
-        VAR_VARPTR(dim_var) = return_varref_ignore_valid(data->variables, buf);
+        // Fallback to synthesized name
+        char buf[256];
+        if (dim_name == NULL) {
+            snprintf(buf, sizeof(buf), "__%s_dim_%d", name, dim_idx);
+            dim_name = buf;
+        }
+        
+        node_st *dim_var = ASTvar(NULL, STRcpy(dim_name));
+        VAR_VARPTR(dim_var) = return_varref_ignore_valid(data->variables, dim_name);
         VAR_DIMENSIONEN(dim_var) = 0;
         
         node_st *dim_var_ref = ASTvarref(dim_var);
