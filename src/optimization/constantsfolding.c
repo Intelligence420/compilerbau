@@ -153,6 +153,7 @@ node_st *CFbinop(node_st *node) {
         case BO_div: 
             if (rval == 0.0) {
                 report_div_by_zero(node, "Division");
+                foldable = false;
             } else res = lval / rval; 
             break;
         case BO_lt: res_bool = (lval < rval); is_bool = true; break;
