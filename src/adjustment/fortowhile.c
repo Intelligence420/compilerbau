@@ -71,6 +71,18 @@ static void ensure_vardef(struct data_ftw *data, char *name) {
   // Create new VarDef
   node_st *new_vardef = ASTvardef(NULL, NULL, TY_int, STRcpy(name));
   FUNBODY_DECL(body) = ASTvardefs(new_vardef, FUNBODY_DECL(body));
+
+  // Re-validate the for-loop variable in the variable table
+  // (find the first entry with this name and make it valid/writable)
+  if (data->variables != NULL) {
+    for (int i = 0; i < data->variables->size; i++) {
+      if (STReq(data->variables->variables[i].name, name)) {
+        data->variables->variables[i].valid = true;
+        data->variables->variables[i].readonly = false;
+        break;
+      }
+    }
+  }
 }
 
 node_st *FTWvar(node_st *node) {
@@ -100,6 +112,8 @@ node_st *FTWfuncall(node_st *node) {
   TRAVchildren(node);
   return node;
 }
+
+static void free_attributes(node_st *node, struct data_ftw *data);
 
 static node_st *copy_and_fix(node_st *node, struct data_ftw *data) {
   if (node == NULL) return NULL;

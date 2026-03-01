@@ -365,7 +365,18 @@ node_st *CGNfundef(node_st *node) {
     int current_slot = 0;
     for (int i = 0; i < data->variables->size; i++) {
         Variable *v = &data->variables->variables[i];
-        v->slot_index = current_slot++;
+        // Check if a variable with the same name was already assigned a slot
+        bool found_dup = false;
+        for (int j = 0; j < i; j++) {
+            if (STReq(data->variables->variables[j].name, v->name)) {
+                v->slot_index = data->variables->variables[j].slot_index;
+                found_dup = true;
+                break;
+            }
+        }
+        if (!found_dup) {
+            v->slot_index = current_slot++;
+        }
     }
     data->total_slots = current_slot;
     data->total_slots += 20; // Reserve 20 slots for temp array literal refs
@@ -485,6 +496,9 @@ node_st *CGNvardef(node_st *node) {
     return node;
 }
 
+/* Forward declaration */
+static int resolve_idx(struct data_cgn *data, VarReferenz *ref);
+
 /* Statements */
 node_st *CGNassign(node_st *node) {
     struct data_cgn *data = DATA_CGN_GET();
@@ -495,7 +509,7 @@ node_st *CGNassign(node_st *node) {
     VarReferenz *ref = VAR_VARPTR(var);
     if (ref == NULL) return node;
 
-    int idx = ref->l;
+    int idx = resolve_idx(data, ref);
     char prefix = type_prefix(ref->type);
 
     if (VAR_EXPRS(var) != NULL) {
@@ -650,13 +664,24 @@ node_st *CGNvarref(node_st *node) {
     return node;
 }
 
+// Resolve actual index for a VarReferenz
+// For locals: look up slot_index from variable table (handles name deduplication)
+// For globals/externs: use ref->l directly (it's the assembly_index)
+static int resolve_idx(struct data_cgn *data, VarReferenz *ref) {
+    if (ref->reftype == REF_LOCAL && ref->n == 0 && 
+        data->variables != NULL && ref->l < data->variables->size) {
+        return data->variables->variables[ref->l].slot_index;
+    }
+    return ref->l;
+}
+
 node_st *CGNvar(node_st *node) {
     struct data_cgn *data = DATA_CGN_GET();
     VarReferenz *ref = VAR_VARPTR(node);
     if (ref == NULL) return node;
 
-    // Use ref->l directly as the index (avoids name-shadowing lookup errors).
-    int idx = ref->l;  // assembly_index for global/extern, slot_index for local
+    // Use resolve_idx to map table index to actual slot index
+    int idx = resolve_idx(data, ref);
 
     char prefix = type_prefix(ref->type);
     bool is_array_access = (VAR_EXPRS(node) != NULL);
