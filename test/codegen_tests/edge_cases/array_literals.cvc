@@ -2,7 +2,7 @@ extern void printInt(int val);
 extern void printNewlines(int num);
 
 export int main() {
-    int[3] arr = [1, 2, 3];
+    int[3] arr = [1, 2, ];
     printInt(arr[0]);
     printNewlines(1);
     printInt(arr[1]);
