@@ -101,15 +101,13 @@ phase Adjustment {
             }
         };
 
-        /*
         traversal ArrayFlatten {
             uid = AFL,
-            nodes = { Program, FunDef, Var },
+            nodes = { Program, FunDef, Var, ArrExpr },
             travdata {
                 user VariableTablePtr variables
             }
         };
-        */
     }
 };
 
@@ -158,7 +156,9 @@ phase AssemblyCode {
                 bool store_context,
                 int total_slots,
                 int param_slots,
-                int arrexpr_slot_offset
+                int arrexpr_slot_offset,
+                int cint_0_idx,
+                int cflt_0_idx
             }
         };
     }

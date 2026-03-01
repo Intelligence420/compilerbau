@@ -43,6 +43,7 @@ add_executable(civicc ${FLEX_CivicLexer_OUTPUTS} ${BISON_CivicParser_OUTPUTS}
     src/adjustment/voidreturn.c
     src/adjustment/declarationsplitting.c
     src/adjustment/renamenested.c
+    src/adjustment/arrayflatten.c
 
     #optimization
     src/optimization/constantsfolding.c

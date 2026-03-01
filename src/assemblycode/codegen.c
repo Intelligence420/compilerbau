@@ -13,6 +13,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <string.h>
 
 /** Ausgabedatei für Assembly */
 static FILE *outfile = NULL;
@@ -187,35 +188,79 @@ node_st *CGNprogram(node_st *node) {
     data->store_context = false;
     data->arrexpr_slot_offset = 0;
 
-    // Erster Durchlauf - Import/Global-Indizes vergeben
+    // Erstes Durchlauf - Funktions-Indizes für Imports
+    int fun_import_counter = 0;
     node_st *decls_ptr = PROGRAM_DECLS(node);
     while (decls_ptr != NULL) {
         node_st *decl = DECLS_DECL(decls_ptr);
         if (NODE_TYPE(decl) == NT_FUNDEC) {
             char *name = FUNHEADER_NAME(FUNDEC_HEADER(decl));
             Function *f = funtable_get_function_ptr(data->functions, name);
-            if (f) f->assembly_index = import_fun_counter++;
-        } else if (NODE_TYPE(decl) == NT_GLOBALDEC) {
-            node_st *ids = GLOBALDEC_IDS(decl);
-            while (ids != NULL) {
-                char *id_name = IDS_ID(ids);
-                Variable *v = vartable_get_variable_ptr(data->variables, id_name);
-                if (v) v->assembly_index = import_var_counter++;
-                ids = IDS_NEXT(ids);
-            }
-            char *name = GLOBALDEC_NAME(decl);
-            Variable *v = vartable_get_variable_ptr(data->variables, name);
-            if (v) v->assembly_index = import_var_counter++;
-        } else if (NODE_TYPE(decl) == NT_VARDEF) {
-            char *name = VARDEF_NAME(decl);
-            Variable *v = vartable_get_variable_ptr(data->variables, name);
-            if (v) v->assembly_index = global_var_counter++;
+            if (f) f->assembly_index = fun_import_counter++;
         }
         decls_ptr = DECLS_NEXT(decls_ptr);
     }
 
-    // Code-Generierung durch AST-Traversierung
-    TRAVchildren(node);
+    // Variablen-Indizes (Imports und Globale)
+    int var_import_counter = 0;
+    int global_counter = 0;
+    for (int i = 0; i < data->variables->size; i++) {
+        Variable *v = &data->variables->variables[i];
+        if (v->isextern) {
+            v->assembly_index = var_import_counter++;
+        } else {
+            v->assembly_index = global_counter++;
+        }
+    }
+
+    // Konstanten für Typecasts (0 und 0.0)
+    Constant c0 = {.type = TY_int, .cint = 0};
+    data->cint_0_idx = consttable_insert(data->constants, c0);
+    Constant cf0 = {.type = TY_float, .cflt = 0.0};
+    data->cflt_0_idx = consttable_insert(data->constants, cf0);
+
+    // Synthetic __init for global variables if not defined in source
+    // DeclarationSplitting creates a user __init fundef (not in function table),
+    // so we check the decl list directly.
+    bool has_user_init = false;
+    {
+        node_st *scan = PROGRAM_DECLS(node);
+        while (scan != NULL) {
+            node_st *d = DECLS_DECL(scan);
+            if (NODE_TYPE(d) == NT_FUNDEF) {
+                char *n = FUNHEADER_NAME(FUNDEF_HEADER(d));
+                if (n && strcmp(n, "__init") == 0) {
+                    has_user_init = true;
+                    break;
+                }
+            }
+            scan = DECLS_NEXT(scan);
+        }
+    }
+    if (!has_user_init) {
+        fprintf(outfile, "\n__init:\n");
+        emit("esr 0");
+        // Traverse global VarDefs to initialize arrays
+        node_st *curr_decl = PROGRAM_DECLS(node);
+        while (curr_decl != NULL) {
+            node_st *decl = DECLS_DECL(curr_decl);
+            if (NODE_TYPE(decl) == NT_VARDEF) {
+                TRAVdo(decl);
+            }
+            curr_decl = DECLS_NEXT(curr_decl);
+        }
+        emit("return");
+    }
+
+    // Traverse functions (top-level labels)
+    node_st *curr_decl = PROGRAM_DECLS(node);
+    while (curr_decl != NULL) {
+        node_st *decl = DECLS_DECL(curr_decl);
+        if (NODE_TYPE(decl) == NT_FUNDEF) {
+            TRAVdo(decl);
+        }
+        curr_decl = DECLS_NEXT(curr_decl);
+    }
 
     // Pseudo-Instruktionen ausgeben
     fprintf(outfile, "\n; --- Pseudo-Instructions ---\n");
@@ -253,39 +298,27 @@ node_st *CGNprogram(node_st *node) {
     }
 
     // --- .importvar ---
-    decls_ptr = PROGRAM_DECLS(node);
-    while (decls_ptr != NULL) {
-        node_st *decl = DECLS_DECL(decls_ptr);
-        if (NODE_TYPE(decl) == NT_GLOBALDEC) {
-            node_st *ids = GLOBALDEC_IDS(decl);
-            while (ids != NULL) {
-                emit_pseudo(".importvar \"%s\" int", IDS_ID(ids));
-                ids = IDS_NEXT(ids);
-            }
-            char *name = GLOBALDEC_NAME(decl);
-            Variable *v = vartable_get_variable_ptr(data->variables, name);
+    for (int i = 0; i < data->variables->size; i++) {
+        Variable *v = &data->variables->variables[i];
+        if (v->isextern) {
             if (v->dim > 0) {
-                emit_pseudo(".importvar \"%s\" %s[]", name, type_string(v->type));
+                emit_pseudo(".importvar \"%s\" %s[]", v->name, type_string(v->type));
             } else {
-                emit_pseudo(".importvar \"%s\" %s", name, type_string(v->type));
+                emit_pseudo(".importvar \"%s\" %s", v->name, type_string(v->type));
             }
         }
-        decls_ptr = DECLS_NEXT(decls_ptr);
     }
 
     // --- .global ---
-    decls_ptr = PROGRAM_DECLS(node);
-    while (decls_ptr != NULL) {
-        node_st *decl = DECLS_DECL(decls_ptr);
-        if (NODE_TYPE(decl) == NT_VARDEF) {
-            Variable *v = vartable_get_variable_ptr(data->variables, VARDEF_NAME(decl));
+    for (int i = 0; i < data->variables->size; i++) {
+        Variable *v = &data->variables->variables[i];
+        if (!v->isextern) {
             if (v->dim > 0) {
                 emit_pseudo(".global %s[]", type_string(v->type));
             } else {
                 emit_pseudo(".global %s", type_string(v->type));
             }
         }
-        decls_ptr = DECLS_NEXT(decls_ptr);
     }
 
     // --- .const ---
@@ -332,8 +365,7 @@ node_st *CGNfundef(node_st *node) {
     int current_slot = 0;
     for (int i = 0; i < data->variables->size; i++) {
         Variable *v = &data->variables->variables[i];
-        v->slot_index = current_slot;
-        current_slot += (1 + v->dim);
+        v->slot_index = current_slot++;
     }
     data->total_slots = current_slot;
     data->total_slots += 20; // Reserve 20 slots for temp array literal refs
@@ -401,25 +433,53 @@ node_st *CGNfunbody(node_st *node) {
 
 /* CGNvardef  */
 node_st *CGNvardef(node_st *node) {
-    if (VARDEF_GLOBAL(node)) {
-        return node;
-    }
     struct data_cgn *data = DATA_CGN_GET();
+    Variable *v = vartable_get_variable_ptr(data->variables, VARDEF_NAME(node));
+    if (v == NULL) return node;
 
     // Lokale Variable: Arrays allokieren
-    node_st *dim_exprs = VARDEF_EXPRS(node);
-    if (dim_exprs != NULL) {
-        // Dimensionen evaluieren
-        TRAVopt(VARDEF_EXPRS(node));
+    node_st *dim_expr_list = VARDEF_EXPRS(node);
+    if (dim_expr_list != NULL) {
+        // Dimensionen evaluieren und speichern
+        int i = 0;
+        node_st *curr = dim_expr_list;
+        while (curr != NULL) {
+            TRAVdo(EXPRS_EXPR(curr));
+            if (VARDEF_GLOBAL(node)) {
+                emit("istoreg %d", v->assembly_index + 1 + i);
+                emit("iloadg %d", v->assembly_index + 1 + i); // Reload for inewa
+            } else {
+                emit("istore %d", v->slot_index + 1 + i);
+                emit("iload %d", v->slot_index + 1 + i); // Reload for inewa
+            }
+            curr = EXPRS_NEXT(curr);
+            i++;
+        }
 
-        Variable *v = vartable_get_variable_ptr(data->variables, VARDEF_NAME(node));
-        if (v == NULL) return node;
-
-        // Inewa (wir gehen von 1D aus)
+        // Inewa
+        if (i > 1) {
+            for (int j = 1; j < i; j++) {
+                emit("imul");
+            }
+        }
         emit("%cnewa", type_prefix(v->type));
         
         // Speichern
-        emit("astore %d", v->slot_index);
+        if (VARDEF_GLOBAL(node)) {
+            emit("astoreg %d", v->assembly_index);
+        } else {
+            emit("astore %d", v->slot_index);
+        }
+    }
+
+    // Initializer handling (nur Skalar für jetzt)
+    if (VARDEF_EXPR(node) != NULL) {
+        TRAVdo(VARDEF_EXPR(node));
+        if (VARDEF_GLOBAL(node)) {
+            emit("%cstoreg %d", type_prefix(v->type), v->assembly_index);
+        } else {
+            emit("%cstore %d", type_prefix(v->type), v->slot_index);
+        }
     }
 
     return node;
@@ -436,30 +496,33 @@ node_st *CGNassign(node_st *node) {
     VarReferenz *ref = VAR_VARPTR(var);
     if (ref == NULL) return node;
 
-    Variable *v_info = vartable_get_variable_ptr(data->variables, VAR_NAME(var));
-    int slot = v_info ? v_info->slot_index : ref->l;
+    // Use ref->l directly as the index (avoids name-shadowing lookup errors).
+    // ref->l is set by return_varref to the index in the correct scope table.
+    // For REF_GLOBAL/REF_EXTERN: ref->l == assembly_index (assigned in same iteration order).
+    // For REF_LOCAL: ref->l == slot_index (also assigned in same iteration order).
+    int idx = ref->l;  // assembly_index for global/extern, slot_index for local
 
     char prefix = type_prefix(ref->type);
     if (VAR_EXPRS(var) != NULL) {
         TRAVdo(VAR_EXPRS(var)); // Index
         if (ref->reftype == REF_EXTERN) {
-            emit("aloade %d", v_info->assembly_index);
+            emit("aloade %d", idx);
         } else if (ref->reftype == REF_GLOBAL) {
-            emit("aloadg %d", v_info->assembly_index);
+            emit("aloadg %d", idx);
         } else {
-            if (ref->n > 0) emit("aloadn %d %d", ref->n, slot);
-            else emit("aload %d", slot);
+            if (ref->n > 0) emit("aloadn %d %d", ref->n, idx);
+            else emit("aload %d", idx);
         }
         emit("%cstorea", prefix);
     } else {
         char full_prefix = (ref->dim > 0) ? 'a' : prefix;
         if (ref->reftype == REF_EXTERN) {
-            emit("%cstoree %d", full_prefix, v_info->assembly_index);
+            emit("%cstoree %d", full_prefix, idx);
         } else if (ref->reftype == REF_GLOBAL) {
-            emit("%cstoreg %d", full_prefix, v_info->assembly_index);
+            emit("%cstoreg %d", full_prefix, idx);
         } else {
-            if (ref->n > 0) emit("%cstoren %d %d", full_prefix, ref->n, slot);
-            else emit("%cstore %d", full_prefix, slot);
+            if (ref->n > 0) emit("%cstoren %d %d", full_prefix, ref->n, idx);
+            else emit("%cstore %d", full_prefix, idx);
         }
     }
     return node;
@@ -529,8 +592,8 @@ node_st *CGNvar(node_st *node) {
     VarReferenz *ref = VAR_VARPTR(node);
     if (ref == NULL) return node;
 
-    Variable *v_info = vartable_get_variable_ptr(data->variables, VAR_NAME(node));
-    int slot = v_info ? v_info->slot_index : ref->l;
+    // Use ref->l directly as the index (avoids name-shadowing lookup errors).
+    int idx = ref->l;  // assembly_index for global/extern, slot_index for local
 
     char prefix = type_prefix(ref->type);
     bool is_array_access = (VAR_EXPRS(node) != NULL);
@@ -538,23 +601,33 @@ node_st *CGNvar(node_st *node) {
     if (is_array_access) {
         TRAVdo(VAR_EXPRS(node));
         if (ref->reftype == REF_EXTERN) {
-            emit("aloade %d", v_info->assembly_index);
+            emit("aloade %d", idx);
         } else if (ref->reftype == REF_GLOBAL) {
-            emit("aloadg %d", v_info->assembly_index);
+            emit("aloadg %d", idx);
         } else {
-            if (ref->n > 0) emit("aloadn %d %d", ref->n, slot);
-            else emit("aload %d", slot);
+            if (ref->n > 0) emit("aloadn %d %d", ref->n, idx);
+            else emit("aload %d", idx);
         }
         emit("%cloada", prefix);
     } else {
         char full_prefix = (ref->dim > 0) ? 'a' : prefix;
         if (ref->reftype == REF_EXTERN) {
-            emit("%cloade %d", full_prefix, v_info->assembly_index);
+            emit("%cloade %d", full_prefix, idx);
         } else if (ref->reftype == REF_GLOBAL) {
-            emit("%cloadg %d", full_prefix, v_info->assembly_index);
+            emit("%cloadg %d", full_prefix, idx);
         } else {
-            if (ref->n > 0) emit("%cloadn %d %d", full_prefix, ref->n, slot);
-            else emit("%cload %d", full_prefix, slot);
+            if (ref->n > 0) emit("%cloadn %d %d", full_prefix, ref->n, idx);
+            else emit("%cload %d", full_prefix, idx);
+        }
+        // When an array variable is used whole (e.g., as function argument),
+        // push dimensions too.
+        if (ref->dim > 0) {
+            for (int i = 0; i < ref->dim; i++) {
+                if (ref->reftype == REF_EXTERN) emit("iloade %d", idx + 1 + i);
+                else if (ref->reftype == REF_GLOBAL) emit("iloadg %d", idx + 1 + i);
+                else if (ref->n > 0) emit("iloadn %d %d", ref->n, idx + 1 + i);
+                else emit("iload %d", idx + 1 + i);
+            }
         }
     }
     return node;
@@ -650,9 +723,40 @@ node_st *CGNbool(node_st *node) {
 }
 
 node_st *CGNtypecast(node_st *node) {
+    struct data_cgn *data = DATA_CGN_GET();
     TRAVdo(TYPECAST_EXPR(node));
-    if (TYPECAST_TYPE(node) == TY_float) emit("i2f");
-    else emit("f2i");
+    enum DeclarationType to = TYPECAST_TYPE(node);
+    enum DeclarationType from = EXPR_TYPE(TYPECAST_EXPR(node));
+
+    if (from == to) return node;
+
+    if (to == TY_int) {
+        if (from == TY_float) {
+            emit("f2i");
+        } else if (from == TY_bool) {
+            // bool -> int: use conditional branch (no direct cast instruction)
+            int lbl_true = new_label(data);
+            int lbl_end  = new_label(data);
+            emit("branch_t bool2int_true_%d", lbl_true);
+            emit("iloadc %d", data->cint_0_idx);
+            emit("jump bool2int_end_%d", lbl_end);
+            emit_label("bool2int_true_%d", lbl_true);
+            Constant c1 = {.type = TY_int, .cint = 1};
+            int one_idx = consttable_insert(data->constants, c1);
+            emit("iloadc %d", one_idx);
+            emit_label("bool2int_end_%d", lbl_end);
+        }
+    } else if (to == TY_float) {
+        if (from == TY_int) emit("i2f");
+    } else if (to == TY_bool) {
+        if (from == TY_int) {
+            emit("iloadc %d", data->cint_0_idx);
+            emit("ine");
+        } else if (from == TY_float) {
+            emit("floadc %d", data->cflt_0_idx);
+            emit("fne");
+        }
+    }
     return node;
 }
 
